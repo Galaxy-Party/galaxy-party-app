@@ -3,7 +3,7 @@ import type { Express } from "express";
 import http from "http";
 import { Server, Socket } from "socket.io";
 import cors from "cors";
-import {getHello} from "./services/helloService";
+import {getHello} from "./services/helloService.js";
 
 const app: Express = express();
 
@@ -36,7 +36,7 @@ io.on("connection", (socket: Socket) => {
     });
 });
 
-const PORT: number = Number(process.env.PORT) || 3001;
+const PORT: number = Number(process.env.PORT) || 4000;
 
 server.listen(PORT, () => {
     console.log(`WebSocket server running on port ${PORT}`);

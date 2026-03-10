@@ -4,7 +4,7 @@ import './index.css'
 import App from './App.tsx'
 import {io} from "socket.io-client";
 
-export const socket = io("http://localhost:3001");
+export const socket = io(import.meta.env.VITE_WS_URL);
 
 socket.on("connect", () => {
     console.log("Connected:", socket.id);
