@@ -1,0 +1,43 @@
+import express from "express";
+import type { Express } from "express";
+import http from "http";
+import { Server, Socket } from "socket.io";
+import cors from "cors";
+import {getHello} from "./services/helloService";
+
+const app: Express = express();
+
+app.use(
+    cors({
+        origin: "*",
+    })
+);
+
+const server = http.createServer(app);
+
+const io: Server = new Server(server, {
+    cors: {
+        origin: "*",
+        methods: ["GET", "POST"],
+    },
+});
+
+io.on("connection", (socket: Socket) => {
+    console.log(`Client connecté : ${socket.id}`);
+
+    socket.on("hello", () => {
+        getHello().then((data) => {
+            io.emit("hello response", data)
+        })
+    })
+
+    socket.on("disconnect", () => {
+        console.log(`Client déconnecté : ${socket.id}`);
+    });
+});
+
+const PORT: number = Number(process.env.PORT) || 3001;
+
+server.listen(PORT, () => {
+    console.log(`WebSocket server running on port ${PORT}`);
+});
