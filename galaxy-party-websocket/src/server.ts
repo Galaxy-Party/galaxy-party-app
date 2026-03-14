@@ -4,6 +4,7 @@ import http from "http";
 import { Server, Socket } from "socket.io";
 import cors from "cors";
 import {getHello} from "./services/helloService.js";
+import 'dotenv/config'
 
 const app: Express = express();
 
@@ -12,7 +13,7 @@ const server = http.createServer(app);
 const io: Server = new Server(server, {
     path: "/ws",
     cors: {
-        origin: ["https://galaxy-party.fr"],
+        origin: ["https://galaxy-party.fr", "http://localhost:5173"],
         methods: ["GET", "POST"],
     },
 });
