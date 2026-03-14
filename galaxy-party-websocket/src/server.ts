@@ -7,17 +7,12 @@ import {getHello} from "./services/helloService.js";
 
 const app: Express = express();
 
-app.use(
-    cors({
-        origin: "*",
-    })
-);
-
 const server = http.createServer(app);
 
 const io: Server = new Server(server, {
+    path: "/ws",
     cors: {
-        origin: "*",
+        origin: ["https://galaxy-party.fr"],
         methods: ["GET", "POST"],
     },
 });
