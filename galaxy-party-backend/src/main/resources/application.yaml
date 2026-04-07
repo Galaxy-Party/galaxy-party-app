@@ -1,3 +1,17 @@
 spring:
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/galaxy_party_db}
+    username: ${DATABASE_USER:admin}
+    password: ${DATABASE_PASSWORD:admin}
+    driver-class-name: org.postgresql.Driver
   application:
     name: backend
+
+server:
+  servlet:
+    context-path: "/api"
+  port: ${PORT:8080}

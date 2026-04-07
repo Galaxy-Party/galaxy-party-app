@@ -1,0 +1,21 @@
+version: "3.9"
+
+services:
+
+  backend:
+    build: ./galaxy-party-backend
+    container_name: backend-prod
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: production
+
+  websocket:
+    build: ./galaxy-party-websocket
+    container_name: websocket-prod
+    ports:
+      - "4000:4000"
+    restart: unless-stopped
+    env_file:
+      - ./galaxy-party-websocket/.env.production
