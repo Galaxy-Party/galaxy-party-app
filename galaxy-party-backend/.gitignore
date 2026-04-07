@@ -31,3 +31,8 @@ build/
 
 ### VS Code ###
 .vscode/
+
+database/.env
+
+src/main/resources/application-production.yml
+src/main/resources/application-stg.yml

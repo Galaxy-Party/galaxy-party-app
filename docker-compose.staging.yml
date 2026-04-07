@@ -8,6 +8,8 @@ services:
     ports:
       - "8081:8080"
     restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: stg
 
   websocket:
     build: ./galaxy-party-websocket
