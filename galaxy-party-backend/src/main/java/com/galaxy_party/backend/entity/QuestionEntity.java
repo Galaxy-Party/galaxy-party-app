@@ -1,5 +1,6 @@
 package com.galaxy_party.backend.entity;
 
+import com.galaxy_party.backend.dto.question.output.QuestionDto;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -30,4 +31,11 @@ public class QuestionEntity {
 
     @Column(nullable = false)
     private String label;
+
+    public static QuestionDto toQuestionDto(QuestionEntity questionEntity) {
+        return QuestionDto.builder()
+                .id(questionEntity.getId())
+                .label(questionEntity.getLabel())
+                .build();
+    }
 }

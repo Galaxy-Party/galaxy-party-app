@@ -3,6 +3,7 @@ package com.galaxy_party.backend.controller;
 
 import com.galaxy_party.backend.dto.question.input.CreateQuestionDto;
 import com.galaxy_party.backend.dto.question.input.UpdateQuestionDto;
+import com.galaxy_party.backend.dto.question.output.QuestionDto;
 import com.galaxy_party.backend.entity.QuestionEntity;
 import com.galaxy_party.backend.services.QuestionService;
 import lombok.RequiredArgsConstructor;
@@ -26,18 +27,18 @@ public class QuestionController {
 
 
     @GetMapping
-    public List<QuestionEntity> findAll() {
-        return questionService.findAll();
+    public List<QuestionDto> findAll() {
+        return questionService.findAll().stream().map(QuestionEntity::toQuestionDto).toList();
     }
 
     @PostMapping
-    public QuestionEntity createQuestion(@RequestBody CreateQuestionDto createQuestionDto) {
-        return questionService.createQuestion(createQuestionDto);
+    public QuestionDto createQuestion(@RequestBody CreateQuestionDto createQuestionDto) {
+        return QuestionEntity.toQuestionDto(questionService.createQuestion(createQuestionDto));
     }
 
     @PatchMapping("/{id}")
-    public QuestionEntity updateQuestion(@PathVariable UUID id, @RequestBody UpdateQuestionDto updateQuestionDto) {
-        return questionService.updateQuestion(id, updateQuestionDto);
+    public QuestionDto updateQuestion(@PathVariable UUID id, @RequestBody UpdateQuestionDto updateQuestionDto) {
+        return QuestionEntity.toQuestionDto(questionService.updateQuestion(id, updateQuestionDto));
     }
 
     @DeleteMapping("/{id}")
