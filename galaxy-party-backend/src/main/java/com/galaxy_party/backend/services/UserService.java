@@ -1,7 +1,7 @@
 package com.galaxy_party.backend.services;
 
-import com.galaxy_party.backend.dto.question.input.CreateUserDto;
-import com.galaxy_party.backend.dto.question.input.UpdateUserDto;
+import com.galaxy_party.backend.dto.user.input.CreateUserDto;
+import com.galaxy_party.backend.dto.user.input.UpdateUserDto;
 import com.galaxy_party.backend.entity.UserEntity;
 import com.galaxy_party.backend.repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -23,10 +23,9 @@ public class UserService {
     }
 
     public UserEntity updateUser(UUID userid, UpdateUserDto updateUserDto) {
-        UserEntity userEntity = userRepository.findById(userid)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        UserEntity userEntity = this.findById(userid);
 
-        userEntity.setLabel(updateUserDto.getLabel());
+        userEntity.setUsername(updateUserDto.getUsername());
 
         return userRepository.save(userEntity);
     }
@@ -36,6 +35,6 @@ public class UserService {
     }
 
     public UserEntity findById(UUID userid) {
-        return userRepository.findById(userid);
+        return userRepository.findById(userid).orElseThrow(() -> new RuntimeException("User not found"));
     }
 }

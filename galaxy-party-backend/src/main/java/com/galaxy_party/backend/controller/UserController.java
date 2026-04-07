@@ -1,9 +1,9 @@
 package com.galaxy_party.backend.controller;
 
 
-import com.galaxy_party.backend.dto.question.input.CreateUserDto;
-import com.galaxy_party.backend.dto.question.input.UpdateUserDto;
-import com.galaxy_party.backend.dto.question.output.UserDto;
+import com.galaxy_party.backend.dto.user.input.CreateUserDto;
+import com.galaxy_party.backend.dto.user.input.UpdateUserDto;
+import com.galaxy_party.backend.dto.user.output.UserDto;
 import com.galaxy_party.backend.entity.UserEntity;
 import com.galaxy_party.backend.services.UserService;
 import lombok.RequiredArgsConstructor;
