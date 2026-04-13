@@ -1,39 +1,17 @@
-import { useMemo } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import backImg from '../assets/back.png'
-import svgRaw from '../assets/avatars/vecteezy_vector-animals-dogs-cats-white-bears-pandas-rats-rabbits_6731369.svg?raw'
-
-const viewBoxes = [
-  '80 165 1000 1000',
-  '1016 81 1000 1000',
-  '1899 113 1000 1000',
-  '108 1003 1000 1000',
-  '1000 1037 1000 1000',
-  '1896 1023 1000 1000',
-  '92 1920 1000 1000',
-  '962 1900 1000 1000',
-  '1910 1896 1000 1000',
-]
+import avatars from '../assets/avatars'
 
 function RulesPage() {
   const navigate = useNavigate()
   const location = useLocation()
   const avatarIndex: number = location.state?.avatarIndex ?? 0
 
-  const avatarSvg = useMemo(() =>
-    svgRaw.replace(
-      'width="3000" height="3000" viewBox="0 0 3000 3000"',
-      `width="100%" height="100%" viewBox="${viewBoxes[avatarIndex]}"`
-    ),
-    [avatarIndex]
-  )
-
   return (
     <div
       className="w-full min-h-screen bg-cover bg-center bg-no-repeat"
       style={{ backgroundImage: `url(${backImg})` }}
     >
-      {/* Top row: logo (left, clickable) + avatar (center) */}
       <div className="relative flex justify-center pt-10">
         <button
           onClick={() => navigate('/menu', { state: { avatarIndex } })}
@@ -47,13 +25,13 @@ function RulesPage() {
         </button>
 
         <div
-          className="w-48 h-48 rounded-full overflow-hidden border-2"
+          className="w-72 h-72 rounded-full overflow-hidden border-2 flex items-center justify-center"
           style={{ backgroundColor: '#051240', borderColor: '#DEB992' }}
-          dangerouslySetInnerHTML={{ __html: avatarSvg }}
-        />
+        >
+          <img src={avatars[avatarIndex]} alt="avatar" className="w-3/4 h-3/4 object-contain" />
+        </div>
       </div>
 
-      {/* Rules container */}
       <div
         className="mx-auto mt-8 rounded-2xl border-2 p-10"
         style={{
