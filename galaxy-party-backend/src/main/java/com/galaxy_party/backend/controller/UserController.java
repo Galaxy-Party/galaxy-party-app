@@ -7,6 +7,8 @@ import com.galaxy_party.backend.dto.user.output.UserDto;
 import com.galaxy_party.backend.entity.UserEntity;
 import com.galaxy_party.backend.services.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -27,23 +29,25 @@ public class UserController {
 
 
     @GetMapping("/{id}")
-    public UserDto findById(@PathVariable UUID id) {
-        return UserEntity.toUserDto(userService.findById(id));
+    public ResponseEntity<UserDto> findById(@PathVariable UUID id) {
+        return new ResponseEntity<>(UserEntity.toUserDto(userService.findById(id)), HttpStatus.OK);
     }
 
     @PostMapping
-    public UserDto createUser(@RequestBody CreateUserDto createUserDto) {
-        return UserEntity.toUserDto(userService.createUser(createUserDto));
+    public ResponseEntity<UserDto> createUser(@RequestBody CreateUserDto createUserDto) {
+        return new ResponseEntity<>(UserEntity.toUserDto(userService.createUser(createUserDto)), HttpStatus.CREATED);
     }
 
     @PatchMapping("/{id}")
-    public UserDto updateUser(@PathVariable UUID id, @RequestBody UpdateUserDto updateUserDto) {
-        return UserEntity.toUserDto(userService.updateUser(id, updateUserDto));
+    public ResponseEntity<UserDto> updateUser(@PathVariable UUID id, @RequestBody UpdateUserDto updateUserDto) {
+        return new ResponseEntity<>(UserEntity.toUserDto(userService.updateUser(id, updateUserDto)), HttpStatus.OK);
     }
 
     @DeleteMapping("/{id}")
-    public void deleteUser(@PathVariable UUID id) {
+    public ResponseEntity<?> deleteUser(@PathVariable UUID id) {
         userService.deleteUser(id);
+        
+        return ResponseEntity.noContent().build();
     }
 
 

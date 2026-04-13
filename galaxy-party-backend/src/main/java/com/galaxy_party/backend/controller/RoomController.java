@@ -5,6 +5,8 @@ import com.galaxy_party.backend.dto.room.output.RoomDto;
 import com.galaxy_party.backend.entity.RoomEntity;
 import com.galaxy_party.backend.services.RoomService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -23,28 +25,29 @@ public class RoomController {
     private final RoomService roomService;
 
     @GetMapping
-    public List<RoomDto> findAll() {
-        return roomService.findAll().stream().map(RoomEntity::toRoomDto).toList();
+    public ResponseEntity<List<RoomDto>> findAll() {
+        return new ResponseEntity<>(roomService.findAll().stream().map(RoomEntity::toRoomDto).toList(), HttpStatus.OK);
     }
 
     @GetMapping("/{id}")
-    public RoomDto findById(@PathVariable UUID id) {
-        return RoomEntity.toRoomDto(roomService.findById(id));
+    public ResponseEntity<RoomDto> findById(@PathVariable UUID id) {
+        return new ResponseEntity<>(RoomEntity.toRoomDto(roomService.findById(id)), HttpStatus.OK);
     }
 
     @PostMapping
-    public RoomDto createRoom(@RequestBody CreateRoomDto createRoomDto) {
-        return RoomEntity.toRoomDto(roomService.createRoom(createRoomDto));
+    public ResponseEntity<RoomDto> createRoom(@RequestBody CreateRoomDto createRoomDto) {
+        return new ResponseEntity<>(RoomEntity.toRoomDto(roomService.createRoom(createRoomDto)), HttpStatus.CREATED);
     }
 
     @DeleteMapping("/{id}")
-    public void deleteRoom(@PathVariable UUID id) {
+    public ResponseEntity<?> deleteRoom(@PathVariable UUID id) {
         roomService.deleteRoom(id);
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/join/{id}")
-    public Boolean joinRoom(@PathVariable UUID id, @RequestBody UUID userId) {
-        return roomService.joinRoom(id, userId);
+    public ResponseEntity<Boolean> joinRoom(@PathVariable UUID id, @RequestBody UUID userId) {
+        return new ResponseEntity<>(roomService.joinRoom(id, userId), HttpStatus.OK);
     }
     
 }
