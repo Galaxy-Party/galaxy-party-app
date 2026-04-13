@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import backImg from '../assets/back.png'
 import svgRaw from '../assets/avatars/vecteezy_vector-animals-dogs-cats-white-bears-pandas-rats-rabbits_6731369.svg?raw'
 
@@ -15,6 +16,7 @@ const viewBoxes = [
 ]
 
 function CreateUserPage() {
+  const navigate = useNavigate()
   const [avatarIndex, setAvatarIndex] = useState(0)
 
   const avatarSvg = useMemo(() =>
@@ -74,6 +76,7 @@ function CreateUserPage() {
         <button
           className="text-white text-lg px-20 py-3 rounded-2xl cursor-pointer border-2 tracking-wide"
           style={{ backgroundColor: '#051240', borderColor: '#DEB992' }}
+          onClick={() => navigate('/menu', { state: { avatarIndex } })}
         >
           Entrer
         </button>
