@@ -1,5 +1,16 @@
 @import "tailwindcss";
 
+.scrollbar-gold::-webkit-scrollbar {
+  width: 6px;
+}
+.scrollbar-gold::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollbar-gold::-webkit-scrollbar-thumb {
+  background-color: #DEB992;
+  border-radius: 999px;
+}
+
 @layer base {
   :root {
     font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
