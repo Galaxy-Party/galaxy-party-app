@@ -5,6 +5,7 @@ import './index.css'
 import CreateUserPage from './pages/CreateUserPage.tsx'
 import MenuPage from './pages/MenuPage.tsx'
 import RulesPage from './pages/RulesPage.tsx'
+import RoomCreationPage from './pages/RoomCreationPage.tsx'
 import {io} from "socket.io-client";
 
 export const socket = io(import.meta.env.VITE_WS_URL, {
@@ -23,6 +24,7 @@ createRoot(document.getElementById('root')!).render(
         <Route path="/" element={<CreateUserPage />} />
         <Route path="/menu" element={<MenuPage />} />
         <Route path="/rules" element={<RulesPage />} />
+        <Route path="/create-room" element={<RoomCreationPage />} />
       </Routes>
     </BrowserRouter>
   </StrictMode>,
