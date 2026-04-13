@@ -1,6 +1,8 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import './index.css'
+import MenuPage from './pages/MenuPage.tsx'
 import CreateUserPage from './pages/CreateUserPage.tsx'
 import {io} from "socket.io-client";
 
@@ -15,6 +17,11 @@ socket.on("connect", () => {
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <CreateUserPage />
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<CreateUserPage />} />
+        <Route path="/menu" element={<MenuPage />} />
+      </Routes>
+    </BrowserRouter>
   </StrictMode>,
 )
