@@ -1,16 +1,6 @@
 import { useNavigate, useLocation } from 'react-router-dom'
 import backImg from '../assets/back.png'
-import bearImg from '../assets/avatars/bear.png'
-import bunnyImg from '../assets/avatars/bunny.png'
-import catImg from '../assets/avatars/cat.png'
-import dogImg from '../assets/avatars/dog.png'
-import foxImg from '../assets/avatars/fox.png'
-import hamsterImg from '../assets/avatars/hamster.png'
-import mouseImg from '../assets/avatars/mouse.png'
-import pandaImg from '../assets/avatars/panda.png'
-import polarbearImg from '../assets/avatars/polarbear.png'
-
-const avatars = [dogImg, catImg, polarbearImg, bearImg, pandaImg, mouseImg, bunnyImg, hamsterImg, foxImg]
+import avatars from '../assets/avatars'
 
 function MenuPage() {
   const navigate = useNavigate()
