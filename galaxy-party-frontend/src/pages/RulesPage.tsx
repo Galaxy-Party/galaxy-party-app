@@ -1,6 +1,7 @@
 import { useNavigate, useLocation } from 'react-router-dom'
 import backImg from '../assets/back.png'
-import avatars from '../assets/avatars'
+import HomeButton from '../components/HomeButton'
+import AvatarCircle from '../components/AvatarCircle'
 
 function RulesPage() {
   const navigate = useNavigate()
@@ -9,37 +10,18 @@ function RulesPage() {
 
   return (
     <div
-      className="w-full min-h-screen bg-cover bg-center bg-no-repeat"
+      className="relative w-full min-h-screen bg-cover bg-center bg-no-repeat"
       style={{ backgroundImage: `url(${backImg})` }}
     >
-      <div className="relative flex justify-center pt-10">
-        <button
-          onClick={() => navigate('/menu', { state: { avatarIndex } })}
-          className="absolute left-6 top-8 cursor-pointer"
-          style={{ background: 'none', border: 'none', padding: 0 }}
-        >
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 3L2 10H5V20H10V14H14V20H19V10H22L12 3Z" stroke="#DEB992" strokeWidth="1.5" strokeLinejoin="round" fill="none"/>
-            <circle cx="12" cy="10" r="1.5" fill="#DEB992"/>
-          </svg>
-        </button>
+      <HomeButton onClick={() => navigate('/menu', { state: { avatarIndex } })} />
 
-        <div
-          className="w-72 h-72 rounded-full overflow-hidden border-2 flex items-center justify-center"
-          style={{ backgroundColor: '#051240', borderColor: '#DEB992' }}
-        >
-          <img src={avatars[avatarIndex]} alt="avatar" className="w-3/4 h-3/4 object-contain" />
-        </div>
+      <div className="relative flex justify-center pt-10">
+        <AvatarCircle avatarIndex={avatarIndex} className="" />
       </div>
 
       <div
         className="mx-auto mt-8 rounded-2xl border-2 p-10"
-        style={{
-          backgroundColor: '#051240',
-          borderColor: '#DEB992',
-          width: '67%',
-          minHeight: '300px',
-        }}
+        style={{ backgroundColor: '#051240', borderColor: '#DEB992', width: '67%', minHeight: '300px' }}
       >
         <h1 className="text-center text-5xl mb-8" style={{ color: '#4E8098' }}>
           Règles du jeu

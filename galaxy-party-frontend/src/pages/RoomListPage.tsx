@@ -1,7 +1,10 @@
 import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import backImg from '../assets/back.png'
-import avatars from '../assets/avatars'
+import HomeButton from '../components/HomeButton'
+import TextButton from '../components/TextButton'
+import AvatarCircle from '../components/AvatarCircle'
+import JoinRoomModal from '../components/JoinRoomModal'
 
 const FAKE_ROOMS = [
   { id: 1, name: 'Kohaku' },
@@ -26,38 +29,27 @@ function RoomListPage() {
   const location = useLocation()
   const avatarIndex: number = location.state?.avatarIndex ?? 0
   const [search, setSearch] = useState('')
-
+  const [selectedRoom, setSelectedRoom] = useState<{ id: number; name: string } | null>(null)
   const filtered = FAKE_ROOMS.filter(r =>
     r.name.toLowerCase().includes(search.toLowerCase())
   )
+
+  const closeModal = () => setSelectedRoom(null)
+  const handleJoin = (_password: string) => {
+    // TODO: logique de rejoindre le salon
+    closeModal()
+  }
 
   return (
     <div
       className="w-full h-screen overflow-hidden bg-cover bg-center bg-no-repeat flex flex-col items-center"
       style={{ backgroundImage: `url(${backImg})` }}
     >
-      <button
-        onClick={() => navigate('/menu', { state: { avatarIndex } })}
-        className="absolute left-6 top-8 cursor-pointer"
-        style={{ background: 'none', border: 'none', padding: 0 }}
-      >
-        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M12 3L2 10H5V20H10V14H14V20H19V10H22L12 3Z" stroke="#DEB992" strokeWidth="1.5" strokeLinejoin="round" fill="none"/>
-          <circle cx="12" cy="10" r="1.5" fill="#DEB992"/>
-        </svg>
-      </button>
+      <HomeButton onClick={() => navigate('/menu', { state: { avatarIndex } })} />
 
-      <div
-        className="mt-28 w-72 h-72 rounded-full overflow-hidden border-2 flex items-center justify-center"
-        style={{ backgroundColor: '#051240', borderColor: '#DEB992' }}
-      >
-        <img src={avatars[avatarIndex]} alt="avatar" className="w-3/4 h-3/4 object-contain" />
-      </div>
+      <AvatarCircle avatarIndex={avatarIndex} />
 
-      <div
-        className="mt-1 p-6"
-        style={{ width: '60%' }}
-      >
+      <div className="mt-1 p-6" style={{ width: '60%' }}>
         <div className="flex items-center justify-between mb-4">
           <span className="text-white text-3xl">Liste des salons :</span>
           <input
@@ -66,7 +58,7 @@ function RoomListPage() {
             value={search}
             onChange={e => setSearch(e.target.value)}
             className="text-white text-2xl outline-none rounded-md px-3 py-1"
-            style={{ backgroundColor: '#0a1f5c', borderColor: '#DEB992', border: '1px solid #DEB992', background: '#0a1f5c' }}
+            style={{ backgroundColor: '#0a1f5c', border: '1px solid #DEB992' }}
           />
         </div>
 
@@ -78,16 +70,19 @@ function RoomListPage() {
               style={{ backgroundColor: '#051240', borderColor: '#DEB992', height: '52px' }}
             >
               <span className="text-white text-2xl font-bold">{room.name}</span>
-              <button
-                className="text-2xl font-bold cursor-pointer"
-                style={{ color: '#4E8098', background: 'none', border: 'none' }}
-              >
-                Rejoindre
-              </button>
+              <TextButton onClick={() => setSelectedRoom(room)}>Rejoindre</TextButton>
             </div>
           ))}
         </div>
       </div>
+
+      {selectedRoom && (
+        <JoinRoomModal
+          roomName={selectedRoom.name}
+          onClose={closeModal}
+          onJoin={handleJoin}
+        />
+      )}
     </div>
   )
 }
