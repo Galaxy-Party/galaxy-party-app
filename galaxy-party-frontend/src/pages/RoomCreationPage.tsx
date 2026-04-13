@@ -12,7 +12,6 @@ function RoomCreationPage() {
       className="w-full min-h-screen bg-cover bg-center bg-no-repeat flex flex-col items-center"
       style={{ backgroundImage: `url(${backImg})` }}
     >
-      {/* Back button — top left */}
       <button
         onClick={() => navigate('/menu', { state: { avatarIndex } })}
         className="absolute left-6 top-8 cursor-pointer"
@@ -24,7 +23,6 @@ function RoomCreationPage() {
         </svg>
       </button>
 
-      {/* Avatar — same height as menu */}
       <div
         className="mt-28 w-72 h-72 rounded-full overflow-hidden border-2 flex items-center justify-center"
         style={{ backgroundColor: '#051240', borderColor: '#DEB992' }}
@@ -32,7 +30,6 @@ function RoomCreationPage() {
         <img src={avatars[avatarIndex]} alt="avatar" className="w-3/4 h-3/4 object-contain" />
       </div>
 
-      {/* Form */}
       <div className="flex flex-col items-center gap-8 mt-10">
 
         <div className="flex flex-col items-center gap-3">
