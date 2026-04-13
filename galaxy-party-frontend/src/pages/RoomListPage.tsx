@@ -35,7 +35,7 @@ function RoomListPage() {
   )
 
   const closeModal = () => setSelectedRoom(null)
-  const handleJoin = (_password: string) => {
+  const handleJoin = () => {
     // TODO: logique de rejoindre le salon
     closeModal()
   }
