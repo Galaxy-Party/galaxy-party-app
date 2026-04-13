@@ -1,11 +1,13 @@
 package com.galaxy_party.backend.entity;
 
 import com.galaxy_party.backend.dto.question.output.QuestionDto;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,6 +15,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.List;
 import java.util.UUID;
 
 @Getter
@@ -31,6 +34,13 @@ public class QuestionEntity {
 
     @Column(nullable = false)
     private String label;
+
+    @OneToMany(
+            mappedBy = "question",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    private List<AnswerEntity> answers;
 
     public static QuestionDto toQuestionDto(QuestionEntity questionEntity) {
         return QuestionDto.builder()
