@@ -1,0 +1,22 @@
+meta {
+  name: Join Room
+  type: http
+  seq: 5
+}
+
+post {
+  url: http://localhost:8080/rooms/join/a00c1ed7-d233-4680-8113-3ad650f2f7ad
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "userId": "795bb82c-d1fb-4e7d-b36c-293557cafcd5"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

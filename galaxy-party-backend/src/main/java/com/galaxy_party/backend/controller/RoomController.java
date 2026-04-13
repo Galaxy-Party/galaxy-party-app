@@ -32,7 +32,6 @@ public class RoomController {
         return RoomEntity.toRoomDto(roomService.findById(id));
     }
 
-
     @PostMapping
     public RoomDto createRoom(@RequestBody CreateRoomDto createRoomDto) {
         return RoomEntity.toRoomDto(roomService.createRoom(createRoomDto));
@@ -42,4 +41,10 @@ public class RoomController {
     public void deleteRoom(@PathVariable UUID id) {
         roomService.deleteRoom(id);
     }
+
+    @PostMapping("/join/{id}")
+    public Boolean joinRoom(@PathVariable UUID id, @RequestBody UUID userId) {
+        return roomService.joinRoom(id, userId);
+    }
+    
 }

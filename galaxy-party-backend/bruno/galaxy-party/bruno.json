@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "galaxy-party",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}
