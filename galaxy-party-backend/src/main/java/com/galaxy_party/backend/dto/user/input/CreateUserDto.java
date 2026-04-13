@@ -10,10 +10,12 @@ import lombok.Data;
 public class CreateUserDto {
     @NotNull
     private String username;
+    private String imageName;
 
     public static UserEntity toUserEntity(CreateUserDto createUserDto) {
         return UserEntity.builder()
                 .username(createUserDto.getUsername())
+                .imageName(createUserDto.getImageName())
                 .build();
     }
 }
