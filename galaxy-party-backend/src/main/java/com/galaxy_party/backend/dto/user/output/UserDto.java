@@ -10,4 +10,5 @@ import java.util.UUID;
 public class UserDto {
     private UUID id;
     private String username;
+    private String imageName;
 }

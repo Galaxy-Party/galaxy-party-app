@@ -13,11 +13,13 @@ public class UpdateUserDto {
     @NotNull
     private UUID id;
     private String username;
+    private String imageName;
 
     public static UserEntity toUserEntity(UpdateUserDto updateUserDto) {
         return UserEntity.builder()
                 .id(updateUserDto.getId())
                 .username(updateUserDto.getUsername())
+                .imageName(updateUserDto.getImageName())
                 .build();
     }
 }

@@ -34,6 +34,9 @@ public class UserEntity {
     @Column(nullable = false)
     private String username;
 
+    @Column
+    private String imageName;
+
     @ManyToOne
     @JoinColumn(name = "room_id", nullable = true)
     private RoomEntity room;
@@ -42,6 +45,7 @@ public class UserEntity {
         return UserDto.builder()
                 .id(userEntity.getId())
                 .username(userEntity.getUsername())
+                .imageName(userEntity.getImageName())
                 .build();
     }
 }
