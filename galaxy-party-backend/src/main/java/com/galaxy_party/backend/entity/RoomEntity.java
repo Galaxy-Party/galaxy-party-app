@@ -1,7 +1,6 @@
 package com.galaxy_party.backend.entity;
 
 import com.galaxy_party.backend.dto.room.output.RoomDto;
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -30,12 +29,16 @@ public class RoomEntity {
     @Column(updatable = false, nullable = false)
     private UUID id;
 
+    @Column
+    private String name;
+
     @OneToMany(mappedBy = "room")
     private List<UserEntity> users = new ArrayList<>();
 
     public static RoomDto toRoomDto(RoomEntity roomEntity) {
         return RoomDto.builder()
                 .id(roomEntity.getId())
+                .name(roomEntity.getName())
                 .build();
     }
 }
