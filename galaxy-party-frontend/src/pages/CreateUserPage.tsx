@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import backImg from '../assets/back.png'
 import avatars from '../assets/avatars'
+import {useSocket} from "../hooks/useSocket.ts";
+import socket from "../socket/client.ts";
 
 function CreateUserPage() {
   const navigate = useNavigate()
@@ -9,6 +11,11 @@ function CreateUserPage() {
 
   const prevAvatar = () => setAvatarIndex(i => (i - 1 + avatars.length) % avatars.length)
   const nextAvatar = () => setAvatarIndex(i => (i + 1) % avatars.length)
+
+    useSocket("hello:message", (hello) => {
+        console.log(hello.value)
+        socket.emit("hello:send", hello)
+    })
 
   return (
     <div
