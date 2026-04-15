@@ -1,7 +1,7 @@
 
 import {TypedServer, TypedSocket} from "../../types/types.js";
 import {CreateUserPayload, User} from "../../types/user/models.js";
-import {createUser} from "../../services/user.service.js";
+import {createUser, getUser} from "../../services/user.service.js";
 
 export function registerUserHandlers(
     io: TypedServer,
@@ -32,4 +32,19 @@ export function registerUserHandlers(
             ack("Erreur serveur");
         }
     });
+
+    socket.on("user:get", async (id, ack) => {
+        try {
+            const user = await getUser(id);
+
+            if (user) {
+                socket.emit("user:received", user);
+                ack();
+            } else {
+                ack("Utilisateur non trouvé");
+            }
+        } catch (e) {
+            ack("Erreur serveur");
+        }
+    })
 }
