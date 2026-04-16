@@ -1,40 +1,17 @@
 import {useEffect, useState} from 'react'
-import { useNavigate } from 'react-router-dom'
 import backImg from '../assets/back.png'
 import avatars from '../assets/avatars'
-import {useSocket} from "../hooks/useSocket.ts";
-import socket from "../socket/client.ts";
-import type {User} from "../types/user/models.ts";
+import {useUserContext} from "../hooks/useUserContext.ts";
 
 function CreateUserPage() {
-    const navigate = useNavigate()
-
-    //TODO: Ajouter un contexte pour les utilisateur + mettre uniquement l'id dans le localStorage
-    useSocket("user:created", (user) => {
-        localStorage.setItem("galaxy-party-user", JSON.stringify(user));
-        navigate("/menu");
-    })
-
+    const {createUser} = useUserContext();
     const [avatarIndex, setAvatarIndex] = useState(0)
     const [username, setUsername] = useState("");
     const [imageName, setImageName] = useState<string>(avatars[0]);
 
     useEffect(() => {
-        const json = localStorage.getItem("galaxy-party-user")
-        if (json) {
-            const user = JSON.parse(json) as User;
-            console.log(user)
-            navigate("/menu");
-        }
-    }, [navigate]);
-
-    useEffect(() => {
         setImageName(avatars[avatarIndex])
     }, [avatarIndex]);
-
-
-
-
 
   const prevAvatar = () => setAvatarIndex(i => (i - 1 + avatars.length) % avatars.length)
   const nextAvatar = () => setAvatarIndex(i => (i + 1) % avatars.length)
@@ -42,16 +19,10 @@ function CreateUserPage() {
     const handleSubmit = () => {
         if (!username.trim()) return;
 
-        socket.emit(
-            "user:create",
-            {
-                username,
-                imageName,
-            },
-            (err?: string) => {
-                if (err) console.error(err);
-            }
-        );
+        createUser({
+            username,
+            imageName
+        })
     };
 
   return (

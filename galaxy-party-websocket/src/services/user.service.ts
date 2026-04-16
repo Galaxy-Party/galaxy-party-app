@@ -10,3 +10,12 @@ export async function createUser(createUserDto: CreateUserPayload) {
         console.error(error)
     }
 }
+
+export async function getUser(id: string): Promise<User | undefined> {
+    try {
+        const { data: user } = await apiClient.get<User>(`/api/users/${id}`);
+        return user;
+    }catch (error) {
+        console.error(error)
+    }
+}
