@@ -6,6 +6,7 @@ export type UserContextType = {
     setUser: (user: User) => void;
     logout: () => void;
     createUser: (createUserDto: CreateUserPayload) => void;
+    isLoading: boolean;
 };
 
 export const UserContext = createContext<UserContextType | undefined>(undefined);
