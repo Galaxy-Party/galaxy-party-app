@@ -30,6 +30,16 @@ export async function createRoom(payload: CreateRoomPayload): Promise<Room | und
     }
 }
 
+export async function leaveRoom(roomId: string, userId: string): Promise<Room | null> {
+    const { data, status } = await apiClient.post(`/api/rooms/leave/${roomId}`, { userId });
+    if (status === 204) return null;
+    return data as Room;
+}
+
+export async function deleteRoom(roomId: string): Promise<void> {
+    await apiClient.delete(`/api/rooms/${roomId}`);
+}
+
 export async function joinRoom(roomId: string, userId: string, password?: string | null): Promise<boolean | undefined> {
     try {
         const { data } = await apiClient.post<boolean>(`/api/rooms/join/${roomId}`, {
@@ -40,8 +50,4 @@ export async function joinRoom(roomId: string, userId: string, password?: string
     } catch (error) {
         console.error(error);
     }
-}
-
-export async function deleteRoom(roomId: string): Promise<void> {
-    await apiClient.delete(`/api/rooms/${roomId}`);
 }

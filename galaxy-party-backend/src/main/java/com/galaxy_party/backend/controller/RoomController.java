@@ -2,6 +2,7 @@ package com.galaxy_party.backend.controller;
 
 import com.galaxy_party.backend.dto.room.input.CreateRoomDto;
 import com.galaxy_party.backend.dto.room.input.JoinRoomDto;
+import com.galaxy_party.backend.dto.room.input.LeaveRoomDto;
 import com.galaxy_party.backend.dto.room.output.RoomDto;
 import com.galaxy_party.backend.entity.RoomEntity;
 import com.galaxy_party.backend.services.RoomService;
@@ -49,6 +50,13 @@ public class RoomController {
     @PostMapping("/join/{id}")
     public ResponseEntity<Boolean> joinRoom(@PathVariable UUID id, @RequestBody JoinRoomDto joinRoomDto) {
         return new ResponseEntity<>(roomService.joinRoom(id, joinRoomDto.getUserId(), joinRoomDto.getPassword()), HttpStatus.OK);
+    }
+
+    @PostMapping("/leave/{id}")
+    public ResponseEntity<RoomDto> leaveRoom(@PathVariable UUID id, @RequestBody LeaveRoomDto leaveRoomDto) {
+        RoomDto result = roomService.leaveRoom(id, leaveRoomDto.getUserId());
+        if (result == null) return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(result);
     }
     
 }

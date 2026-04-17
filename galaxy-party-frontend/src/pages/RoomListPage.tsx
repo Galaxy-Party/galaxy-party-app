@@ -36,8 +36,13 @@ function RoomListPage() {
     setRooms(prev => [...prev, room]);
   }, []);
 
+  const handleRoomDeleted = useCallback((roomId: string) => {
+    setRooms(prev => prev.filter(r => r.id !== roomId));
+  }, []);
+
   useSocket("room:list", handleRoomList);
   useSocket("room:created", handleRoomCreated);
+  useSocket("room:deleted", handleRoomDeleted);
 
 
 
