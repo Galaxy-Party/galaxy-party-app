@@ -41,3 +41,7 @@ export async function joinRoom(roomId: string, userId: string, password?: string
         console.error(error);
     }
 }
+
+export async function deleteRoom(roomId: string): Promise<void> {
+    await apiClient.delete(`/api/rooms/${roomId}`);
+}

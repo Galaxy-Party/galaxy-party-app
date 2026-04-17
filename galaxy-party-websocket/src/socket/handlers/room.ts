@@ -1,6 +1,6 @@
 import {TypedServer, TypedSocket} from "../../types/types.js";
 import {CreateRoomPayload} from "../../types/room/models.js";
-import {createRoom, getRoomById, getRooms, joinRoom} from "../../services/room.service.js";
+import {createRoom, deleteRoom, getRoomById, getRooms, joinRoom} from "../../services/room.service.js";
 import {getUser} from "../../services/user.service.js";
 
 export function registerRoomHandlers(
@@ -70,6 +70,19 @@ export function registerRoomHandlers(
 
             socket.join(room.id);
             io.emit("room:created", room);
+            ack();
+        } catch (e) {
+            ack("Erreur serveur");
+        }
+    });
+
+    socket.on("room:delete", async (roomId, ack) => {
+        try {
+            if (!roomId) return ack("RoomId manquant");
+
+            await deleteRoom(roomId);
+
+            io.emit("room:deleted", roomId);
             ack();
         } catch (e) {
             ack("Erreur serveur");

@@ -115,7 +115,12 @@ function WaitingRoomPage() {
             {showReturnModal && (
                 <ReturnMenuModal
                     onClose={() => setShowReturnModal(false)}
-                    onConfirm={() => navigate('/menu')}
+                    onConfirm={() => {
+                        socket.emit('room:delete', room.id, (err?: string) => {
+                            if (err) console.error(err)
+                        })
+                        navigate('/menu')
+                    }}
                 />
             )}
         </div>
