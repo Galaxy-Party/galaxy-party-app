@@ -42,9 +42,13 @@ function RoomListPage() {
 
 
   const closeModal = () => setSelectedRoom(null)
-  const handleJoin = () => {
-      navigate('/rooms/' + selectedRoom?.id)
-    closeModal()
+  const handleJoin = (password: string) => {
+    if (!selectedRoom || !user) return;
+    socket.emit("room:join", { roomId: selectedRoom.id, userId: user.id, password }, (err) => {
+      if (err) return console.error(err);
+      navigate('/rooms/' + selectedRoom.id);
+      closeModal();
+    });
   }
 
   return (
@@ -96,6 +100,7 @@ function RoomListPage() {
       {selectedRoom && (
         <JoinRoomModal
           roomName={selectedRoom.name}
+          hasPassword={selectedRoom.hasPassword}
           onClose={closeModal}
           onJoin={handleJoin}
         />

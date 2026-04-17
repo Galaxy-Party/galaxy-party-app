@@ -7,6 +7,15 @@ export async function getRooms(): Promise<Room[]> {
     return data;
 }
 
+export async function getRoomById(roomId: string): Promise<Room | undefined> {
+    try {
+        const { data } = await apiClient.get<Room>(`/api/rooms/${roomId}`);
+        return data;
+    } catch (error) {
+        console.error(error);
+    }
+}
+
 export async function createRoom(payload: CreateRoomPayload): Promise<Room | undefined> {
     try {
         const { data: room } = await apiClient.post<Room>("/api/rooms", {

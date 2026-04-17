@@ -47,6 +47,7 @@ public class RoomEntity {
                 .name(roomEntity.getName())
                 .hasPassword(roomEntity.getPassword() != null && !roomEntity.getPassword().isEmpty())
                 .ownerId(roomEntity.getOwnerId())
+                .users(roomEntity.getUsers().stream().map(UserEntity::toUserDto).toList())
                 .build();
     }
 }
