@@ -7,6 +7,7 @@ export interface ServerToClientEvents {
     "user:created": (user: User) => void;
     "user:received": (user:User) => void;
     "room:created": (room: Room) => void;
+    "room:list": (rooms: Room[]) => void;
 }
 
 export interface ClientToServerEvents {
@@ -23,4 +24,5 @@ export interface ClientToServerEvents {
         payload: CreateRoomPayload,
         ack: (err?: string) => void
     ) => void;
+    "room:get_all": (ack: (err?: string) => void) => void;
 }

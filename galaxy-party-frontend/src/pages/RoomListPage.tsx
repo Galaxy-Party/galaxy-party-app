@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import backImg from '../assets/back.png'
 import HomeButton from '../components/HomeButton'
@@ -6,35 +6,40 @@ import TextButton from '../components/TextButton'
 import AvatarCircle from '../components/AvatarCircle'
 import JoinRoomModal from '../components/JoinRoomModal'
 import {useUserContext} from "../hooks/useUserContext.ts";
-
-const FAKE_ROOMS = [
-  { id: 1, name: 'Kohaku' },
-  { id: 2, name: 'Kiki' },
-  { id: 3, name: 'Mika' },
-  { id: 4, name: 'Spike' },
-  { id: 5, name: 'Galaxy Party' },
-  { id: 6, name: 'Nebula Squad' },
-  { id: 7, name: 'StarDust' },
-  { id: 8, name: 'Cosmic Crew' },
-  { id: 9, name: 'Luna Party' },
-  { id: 10, name: 'Orion' },
-  { id: 11, name: 'Andromeda' },
-  { id: 12, name: 'Nova Club' },
-  { id: 13, name: 'Black Hole' },
-  { id: 14, name: 'Supernova' },
-  { id: 15, name: 'Pulsar' },
-]
+import {useSocket} from "../hooks/useSocket.ts";
+import socket from "../socket/client.ts";
+import type {Room} from "../types/models.ts";
 
 function RoomListPage() {
   const navigate = useNavigate()
-    const {user} = useUserContext()
+  const {user} = useUserContext()
 
+  const [rooms, setRooms] = useState<Room[]>([])
   const [search, setSearch] = useState('')
-  const [selectedRoom, setSelectedRoom] = useState<{ id: number; name: string } | null>(null)
+  const [selectedRoom, setSelectedRoom] = useState<Room | null>(null)
 
-  const filtered = FAKE_ROOMS.filter(r =>
-    r.name.toLowerCase().includes(search.toLowerCase())
-  )
+    const filtered = rooms.filter(r =>
+        r.name.toLowerCase().includes(search.toLowerCase())
+    )
+
+  useEffect(() => {
+    socket.emit("room:get_all", (err) => {
+      if (err) console.error(err);
+    });
+  }, []);
+
+  const handleRoomList = useCallback((roomList: Room[]) => {
+    setRooms(roomList);
+  }, []);
+
+  const handleRoomCreated = useCallback((room: Room) => {
+    setRooms(prev => [...prev, room]);
+  }, []);
+
+  useSocket("room:list", handleRoomList);
+  useSocket("room:created", handleRoomCreated);
+
+
 
   const closeModal = () => setSelectedRoom(null)
   const handleJoin = () => {
@@ -66,16 +71,25 @@ function RoomListPage() {
         </div>
 
         <div className="flex flex-col gap-2 overflow-y-auto scrollbar-gold pr-3" style={{ maxHeight: '300px' }}>
-          {filtered.map(room => (
-            <div
-              key={room.id}
-              className="flex items-center justify-between px-4 rounded-lg border"
-              style={{ backgroundColor: '#051240', borderColor: '#DEB992', height: '52px' }}
-            >
-              <span className="text-white text-2xl font-bold">{room.name}</span>
-              <TextButton onClick={() => setSelectedRoom(room)}>Rejoindre</TextButton>
-            </div>
-          ))}
+            {
+                filtered.length != 0 ?
+                    filtered.map(room => (
+                        <div
+                            key={room.id}
+                            className="flex items-center justify-between px-4 rounded-lg border"
+                            style={{ backgroundColor: '#051240', borderColor: '#DEB992', height: '52px' }}
+                        >
+                            <span className="text-white text-2xl font-bold">{room.name}</span>
+                            <TextButton onClick={() => setSelectedRoom(room)}>Rejoindre</TextButton>
+                        </div>
+                    ))
+                    :
+                    <div className="flex justify-center items-center mt-5">
+                        <span className="text-white text-2xl bold">Aucun salon trouvé</span>
+                    </div>
+
+            }
+          {}
         </div>
       </div>
 

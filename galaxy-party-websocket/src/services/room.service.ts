@@ -2,6 +2,11 @@
 import {apiClient} from "../lib/axios.js";
 import {randomUUID} from "crypto";
 
+export async function getRooms(): Promise<Room[]> {
+    const { data } = await apiClient.get<Room[]>("/api/rooms");
+    return data;
+}
+
 export async function createRoom(payload: CreateRoomPayload): Promise<Room | undefined> {
     try {
         const { data: room } = await apiClient.post<Room>("/api/rooms", {
