@@ -35,6 +35,9 @@ public class RoomEntity {
     @Column
     private String password;
 
+    @Column(name = "owner_id")
+    private UUID ownerId;
+
     @OneToMany(mappedBy = "room")
     private List<UserEntity> users = new ArrayList<>();
 
@@ -43,6 +46,7 @@ public class RoomEntity {
                 .id(roomEntity.getId())
                 .name(roomEntity.getName())
                 .hasPassword(roomEntity.getPassword() != null && !roomEntity.getPassword().isEmpty())
+                .ownerId(roomEntity.getOwnerId())
                 .build();
     }
 }
