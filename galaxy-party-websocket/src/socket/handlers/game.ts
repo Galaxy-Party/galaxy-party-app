@@ -1,32 +1,32 @@
 import { TypedServer, TypedSocket } from '../../types/types.js';
 import { getQuestions } from '../../services/game.service.js';
-import { getSession, setSession, deleteSession } from '../../store/game.store.js';
+import { getSession, setSession } from '../../store/game.store.js';
 import { GameSession } from '../../types/game/models.js';
 
 const TIMER_MS = 150_000; // 2:30
 
 export function registerGameHandlers(io: TypedServer, socket: TypedSocket) {
 
-    socket.on('game:start', async (roomId, ack) => {
+    socket.on('game:start', async ({ roomId, userId }, ack) => {
         try {
             if (getSession(roomId)) return ack('Partie déjà en cours');
 
             const questions = await getQuestions();
             if (!questions.length) return ack('Aucune question disponible');
 
-            const roomSockets = await io.in(roomId).fetchSockets();
-            const playerIds = roomSockets.map(s => s.id);
+            for (let i = questions.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [questions[i], questions[j]] = [questions[j], questions[i]];
+            }
 
             const session: GameSession = {
                 roomId,
-                ownerId: socket.id,
+                ownerId: userId,
                 questions,
                 currentQuestionIndex: 0,
-                currentPlayerId: socket.id,
+                currentPlayerId: userId,
                 readyPlayers: new Set(),
-                players: new Map(
-                    playerIds.map(id => [id, { userId: id, timeRemaining: TIMER_MS }])
-                ),
+                players: new Map(),
             };
 
             setSession(roomId, session);
@@ -37,11 +37,12 @@ export function registerGameHandlers(io: TypedServer, socket: TypedSocket) {
         }
     });
 
-    socket.on('game:player_ready', (roomId, ack) => {
+    socket.on('game:player_ready', ({ roomId, userId }, ack) => {
         try {
             const session = getSession(roomId);
             if (!session) return ack('Session introuvable');
 
+            session.players.set(userId, { userId, timeRemaining: TIMER_MS });
             session.readyPlayers.add(socket.id);
             ack();
 
@@ -55,7 +56,11 @@ export function registerGameHandlers(io: TypedServer, socket: TypedSocket) {
                     io.to(roomId).emit('game:countdown', count);
                 } else {
                     clearInterval(interval);
-                    io.to(roomId).emit('game:started', {
+                    io.to(roomId).emit('game:started', { currentPlayerId: session.currentPlayerId });
+
+                    const question = session.questions[session.currentQuestionIndex];
+                    io.to(roomId).emit('game:question', {
+                        question: { id: question.id, label: question.label },
                         currentPlayerId: session.currentPlayerId,
                     });
                 }

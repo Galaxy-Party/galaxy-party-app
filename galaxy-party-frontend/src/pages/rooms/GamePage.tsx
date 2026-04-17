@@ -15,15 +15,16 @@ function GamePage() {
     const [room, setRoom] = useState<Room | null>(null);
     const [countdown, setCountdown] = useState<number | null>(null);
     const [currentPlayerId, setCurrentPlayerId] = useState<string | null>(null);
+    const [question, setQuestion] = useState<{ id: string; label: string } | null>(null);
     const [answer, setAnswer] = useState("");
 
     const opponent = room?.users.find(u => u.id !== user?.id) ?? null;
 
     useEffect(() => {
-        if (!id) return;
+        if (!id || !user) return;
         socket.emit("room:get", id, (err) => { if (err) console.error(err); });
-        socket.emit("game:player_ready", id, (err) => { if (err) console.error(err); });
-    }, [id]);
+        socket.emit("game:player_ready", { roomId: id, userId: user.id }, (err) => { if (err) console.error(err); });
+    }, [id, user]);
 
     const handleRoomDetails = useCallback((r: Room) => setRoom(r), []);
     const handleCountdown = useCallback((count: number) => setCountdown(count), []);
@@ -31,10 +32,15 @@ function GamePage() {
         setCurrentPlayerId(currentPlayerId);
         setCountdown(null);
     }, []);
+    const handleQuestion = useCallback(({ question, currentPlayerId }: { question: { id: string; label: string }; currentPlayerId: string }) => {
+        setQuestion(question);
+        setCurrentPlayerId(currentPlayerId);
+    }, []);
 
     useSocket("room:details", handleRoomDetails);
     useSocket("game:countdown", handleCountdown);
     useSocket("game:started", handleGameStarted);
+    useSocket("game:question", handleQuestion);
 
     const isMyTurn = currentPlayerId === user?.id;
     const accentColor = "#DEB992";
@@ -125,7 +131,7 @@ function GamePage() {
 
                 <div className="w-full max-w-2xl rounded-2xl border px-10 py-8" style={{ backgroundColor: "#051240cc", borderColor: accentColor, boxShadow: `0 0 24px ${accentColor}22`, backdropFilter: "blur(6px)" }}>
                     <p className="text-center text-xl text-white/90 leading-relaxed tracking-wide">
-                        Quelle est la capitale de la France ?
+                        {question?.label ?? '...'}
                     </p>
                 </div>
 
