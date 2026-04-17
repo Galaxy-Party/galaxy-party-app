@@ -21,6 +21,7 @@ export function registerRoomHandlers(
         try {
             const room = await getRoomById(roomId);
             if (!room) return ack("Salon introuvable");
+            socket.join(roomId);
             socket.emit("room:details", room);
             ack();
         } catch (e) {

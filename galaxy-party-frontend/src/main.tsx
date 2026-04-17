@@ -23,8 +23,8 @@ createRoot(document.getElementById('root')!).render(
                             <Route path="/rules" element={<RulesPage/>}/>
                             <Route path="/create-room" element={<RoomCreationPage/>}/>
                             <Route path="/rooms" element={<RoomListPage/>}/>
-                        <Route path="/rooms/:id" element={<WaitingRoomPage/>} />
-                        <Route path="/rooms/:id/game" element={<GamePage/>} />
+                            <Route path="/rooms/:id" element={<WaitingRoomPage/>} />
+                            <Route path="/rooms/:id/game" element={<GamePage/>} />
                         </Route>
                     </Routes>
             </UserProvider>
