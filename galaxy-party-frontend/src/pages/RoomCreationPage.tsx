@@ -1,22 +1,22 @@
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import backImg from '../assets/back.png'
 import HomeButton from '../components/HomeButton'
 import PrimaryButton from '../components/PrimaryButton'
 import AvatarCircle from '../components/AvatarCircle'
+import {useUserContext} from "../hooks/useUserContext.ts";
 
 function RoomCreationPage() {
   const navigate = useNavigate()
-  const location = useLocation()
-  const avatarIndex: number = location.state?.avatarIndex ?? 0
+    const {user} = useUserContext()
 
   return (
     <div
       className="w-full min-h-screen bg-cover bg-center bg-no-repeat flex flex-col items-center"
       style={{ backgroundImage: `url(${backImg})` }}
     >
-      <HomeButton onClick={() => navigate('/menu', { state: { avatarIndex } })} />
+      <HomeButton onClick={() => navigate('/menu')} />
 
-      <AvatarCircle avatarIndex={avatarIndex} />
+      <AvatarCircle avatarFile={user?.imageName} className="mt-28" />
 
       <div className="flex flex-col items-center gap-8 mt-10">
         <div className="flex flex-col items-center gap-3">

@@ -1,17 +1,15 @@
-import avatars from '../assets/avatars'
-
 interface AvatarCircleProps {
-  avatarIndex: number
+  avatarFile: string | null | undefined
   className?: string
 }
 
-function AvatarCircle({ avatarIndex, className = 'mt-28' }: AvatarCircleProps) {
+function AvatarCircle({ avatarFile, className}: AvatarCircleProps) {
   return (
     <div
-      className={`${className} w-72 h-72 rounded-full overflow-hidden border-2 flex items-center justify-center`}
+      className={`${className} w-42 h-42 rounded-full overflow-hidden border-2 flex items-center justify-center`}
       style={{ backgroundColor: '#051240', borderColor: '#DEB992' }}
     >
-      <img src={avatars[avatarIndex]} alt="avatar" className="w-3/4 h-3/4 object-contain" />
+      <img src={avatarFile ?? "/src/assets/avatars/dog.png"} alt="avatar" className="w-3/4 h-3/4 object-contain" />
     </div>
   )
 }
