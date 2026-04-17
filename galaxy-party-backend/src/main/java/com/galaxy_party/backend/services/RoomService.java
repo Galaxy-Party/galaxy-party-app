@@ -1,6 +1,7 @@
 package com.galaxy_party.backend.services;
 
 import com.galaxy_party.backend.dto.room.input.CreateRoomDto;
+import com.galaxy_party.backend.dto.room.output.RoomDto;
 import com.galaxy_party.backend.entity.RoomEntity;
 import com.galaxy_party.backend.entity.UserEntity;
 import com.galaxy_party.backend.repository.RoomRepository;
@@ -52,6 +53,27 @@ public class RoomService {
     }
 
 
+
+    public RoomDto leaveRoom(UUID roomId, UUID userId) {
+        UserEntity user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        RoomEntity room = findById(roomId);
+
+        room.getUsers().remove(user);
+        user.setRoom(null);
+        userRepository.save(user);
+
+        if (room.getUsers().isEmpty()) {
+            roomRepository.delete(room);
+            return null;
+        }
+
+        if (room.getOwnerId().equals(userId)) {
+            room.setOwnerId(room.getUsers().get(0).getId());
+        }
+
+        roomRepository.save(room);
+        return RoomEntity.toRoomDto(room);
+    }
 
     public Boolean joinRoom(UUID roomId, UUID userId, String password) {
         UserEntity userEntity = userRepository.findById(userId)

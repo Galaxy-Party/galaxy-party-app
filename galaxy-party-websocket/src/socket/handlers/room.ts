@@ -1,6 +1,6 @@
 import {TypedServer, TypedSocket} from "../../types/types.js";
 import {CreateRoomPayload} from "../../types/room/models.js";
-import {createRoom, deleteRoom, getRoomById, getRooms, joinRoom} from "../../services/room.service.js";
+import {createRoom, deleteRoom, getRoomById, getRooms, joinRoom, leaveRoom} from "../../services/room.service.js";
 import {getUser} from "../../services/user.service.js";
 
 export function registerRoomHandlers(
@@ -36,6 +36,24 @@ export function registerRoomHandlers(
             if (!user) return ack("Utilisateur introuvable");
             socket.join(roomId);
             io.to(roomId).emit("room:user_joined", user);
+            ack();
+        } catch (e) {
+            ack("Erreur serveur");
+        }
+    });
+
+    socket.on("room:leave", async ({ roomId, userId }, ack) => {
+        try {
+            socket.leave(roomId);
+            const updatedRoom = await leaveRoom(roomId, userId);
+            if (updatedRoom) {
+                io.to(roomId).emit("room:user_left", userId);
+                if (updatedRoom.ownerId !== userId) {
+                    io.to(roomId).emit("room:owner_changed", updatedRoom.ownerId);
+                }
+            } else {
+                io.emit("room:deleted", roomId);
+            }
             ack();
         } catch (e) {
             ack("Erreur serveur");

@@ -34,20 +34,44 @@ function WaitingRoomPage() {
         });
     }, []);
 
+    const handleUserLeft = useCallback((leftUserId: string) => {
+        setRoom(prev => {
+            if (!prev) return prev;
+            return { ...prev, users: prev.users.filter(u => u.id !== leftUserId) };
+        });
+    }, []);
+
+    const handleOwnerChanged = useCallback((newOwnerId: string) => {
+        setRoom(prev => prev ? { ...prev, ownerId: newOwnerId } : prev);
+    }, []);
+
+    const handleRoomDeleted = useCallback(() => navigate('/menu'), [navigate]);
+
     useSocket("room:details", handleRoomDetails);
     useSocket("room:user_joined", handleUserJoined);
+    useSocket("room:user_left", handleUserLeft);
+    useSocket("room:owner_changed", handleOwnerChanged);
+    useSocket("room:deleted", handleRoomDeleted);
 
     if (!room) return null;
 
     const opponent = room.users.find(u => u.id !== user?.id) ?? null;
 
+    const handleLeave = () => {
+        if (!id || !user) return;
+        socket.emit("room:leave", { roomId: id, userId: user.id }, (err) => {
+            if (err) console.error(err);
+            navigate('/menu');
+        });
+    };
+
     const handleHomeClick = () => {
         if (room.users.length === 1) {
-            setShowReturnModal(true)
+            setShowReturnModal(true);
         } else {
-            navigate('/menu')
+            handleLeave();
         }
-    }
+    };
 
     return (
         <div
@@ -115,12 +139,7 @@ function WaitingRoomPage() {
             {showReturnModal && (
                 <ReturnMenuModal
                     onClose={() => setShowReturnModal(false)}
-                    onConfirm={() => {
-                        socket.emit('room:delete', room.id, (err?: string) => {
-                            if (err) console.error(err)
-                        })
-                        navigate('/menu')
-                    }}
+                    onConfirm={handleLeave}
                 />
             )}
         </div>
