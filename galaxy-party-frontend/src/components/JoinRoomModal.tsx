@@ -3,11 +3,12 @@ import TextButton from './TextButton'
 
 interface JoinRoomModalProps {
   roomName: string
+  hasPassword: boolean
   onClose: () => void
   onJoin: (password: string) => void
 }
 
-function JoinRoomModal({ roomName, onClose, onJoin }: JoinRoomModalProps) {
+function JoinRoomModal({ roomName, hasPassword, onClose, onJoin }: JoinRoomModalProps) {
   const [password, setPassword] = useState('')
 
   return (
@@ -21,16 +22,18 @@ function JoinRoomModal({ roomName, onClose, onJoin }: JoinRoomModalProps) {
       >
         <h2 className="text-3xl font-semibold" style={{ color: '#4E8098' }}>{roomName}</h2>
 
-        <div className="flex flex-col items-center gap-3 w-full">
-          <label className="text-white text-lg font-light">Entrez le mot de passe du salon :</label>
-          <input
-            type="password"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            className="border-b-2 text-white text-center outline-none w-64 pb-2 text-lg"
-            style={{ borderColor: '#DEB992', background: 'none' }}
-          />
-        </div>
+        {hasPassword && (
+          <div className="flex flex-col items-center gap-3 w-full">
+            <label className="text-white text-lg font-light">Entrez le mot de passe du salon :</label>
+            <input
+              type="password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              className="border-b-2 text-white text-center outline-none w-64 pb-2 text-lg"
+              style={{ borderColor: '#DEB992', background: 'none' }}
+            />
+          </div>
+        )}
 
         <div className="flex gap-8 mt-2">
           <TextButton onClick={onClose}>Retour</TextButton>

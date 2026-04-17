@@ -1,8 +1,11 @@
-﻿export interface Room {
+﻿import {User} from "../user/models.js";
+
+export interface Room {
     id: string;
     name: string;
     hasPassword: boolean;
     ownerId: string;
+    users: User[];
 }
 
 export interface CreateRoomPayload {

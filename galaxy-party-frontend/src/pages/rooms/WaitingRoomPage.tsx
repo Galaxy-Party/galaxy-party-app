@@ -1,28 +1,48 @@
-import { useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useCallback, useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import backImg from "../../assets/back.png";
 import HomeButton from "../../components/HomeButton.tsx";
 import { useUserContext } from "../../hooks/useUserContext.ts";
 import AvatarCircle from "../../components/AvatarCircle.tsx";
-import ReturnMenuModal from "../../components/ReturnMenuModal.tsx";
+import { useSocket } from "../../hooks/useSocket.ts";
+import socket from "../../socket/client.ts";
 import type { Room } from "../../types/room/models.ts";
+import type { User } from "../../types/user/models.ts";
+import ReturnMenuModal from "../../components/ReturnMenuModal.tsx";
 
 function WaitingRoomPage() {
     const navigate = useNavigate();
-    const location = useLocation();
-    const { user } = useUserContext()
-    const room: Room | undefined = location.state?.room
+    const { id } = useParams<{ id: string }>();
+    const { user } = useUserContext();
     const [showReturnModal, setShowReturnModal] = useState(false)
 
-    const isSolo = true
+    const [room, setRoom] = useState<Room | null>(null);
 
-    if (!room) {
-        navigate('/menu')
-        return;
-    }
+    useEffect(() => {
+        if (!id) { navigate('/menu'); return; }
+        socket.emit("room:get", id, (err) => {
+            if (err) navigate('/menu');
+        });
+    }, [id, navigate]);
+
+    const handleRoomDetails = useCallback((r: Room) => setRoom(r), []);
+
+    const handleUserJoined = useCallback((newUser: User) => {
+        setRoom(prev => {
+            if (!prev || prev.users.some(u => u.id === newUser.id)) return prev;
+            return { ...prev, users: [...prev.users, newUser] };
+        });
+    }, []);
+
+    useSocket("room:details", handleRoomDetails);
+    useSocket("room:user_joined", handleUserJoined);
+
+    if (!room) return null;
+
+    const opponent = room.users.find(u => u.id !== user?.id) ?? null;
 
     const handleHomeClick = () => {
-        if (isSolo) {
+        if (room.users.length === 1) {
             setShowReturnModal(true)
         } else {
             navigate('/menu')
@@ -51,9 +71,11 @@ function WaitingRoomPage() {
                             <span className="text-2xl text-white">{user?.username}</span>
                         </div>
 
-                        <div className="flex items-center gap-5 mt-4 opacity-40">
-                            <AvatarCircle avatarFile={null}/>
-                            <span className="text-2xl text-white">En attente...</span>
+                        <div className={`flex items-center gap-5 mt-4 ${!opponent ? 'opacity-40' : ''}`}>
+                            <AvatarCircle avatarFile={opponent?.imageName ?? null}/>
+                            <span className="text-2xl text-white">
+                                {opponent ? opponent.username : 'En attente...'}
+                            </span>
                         </div>
                     </div>
                     <div className="flex-col w-1/2">

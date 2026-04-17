@@ -1,6 +1,7 @@
 import {TypedServer, TypedSocket} from "../../types/types.js";
 import {CreateRoomPayload} from "../../types/room/models.js";
-import {createRoom, getRooms, joinRoom} from "../../services/room.service.js";
+import {createRoom, getRoomById, getRooms, joinRoom} from "../../services/room.service.js";
+import {getUser} from "../../services/user.service.js";
 
 export function registerRoomHandlers(
     io: TypedServer,
@@ -10,6 +11,31 @@ export function registerRoomHandlers(
         try {
             const rooms = await getRooms();
             socket.emit("room:list", rooms);
+            ack();
+        } catch (e) {
+            ack("Erreur serveur");
+        }
+    });
+
+    socket.on("room:get", async (roomId, ack) => {
+        try {
+            const room = await getRoomById(roomId);
+            if (!room) return ack("Salon introuvable");
+            socket.emit("room:details", room);
+            ack();
+        } catch (e) {
+            ack("Erreur serveur");
+        }
+    });
+
+    socket.on("room:join", async ({ roomId, userId, password }, ack) => {
+        try {
+            const success = await joinRoom(roomId, userId, password);
+            if (!success) return ack("Mot de passe incorrect");
+            const user = await getUser(userId);
+            if (!user) return ack("Utilisateur introuvable");
+            socket.join(roomId);
+            io.to(roomId).emit("room:user_joined", user);
             ack();
         } catch (e) {
             ack("Erreur serveur");
@@ -42,6 +68,7 @@ export function registerRoomHandlers(
 
             await joinRoom(room.id, ownerId, password);
 
+            socket.join(room.id);
             io.emit("room:created", room);
             ack();
         } catch (e) {
