@@ -8,7 +8,6 @@ import RulesPage from './pages/RulesPage.tsx'
 import RoomCreationPage from './pages/RoomCreationPage.tsx'
 import RoomListPage from './pages/RoomListPage.tsx'
 import {UserProvider} from "./context/UserContext.tsx";
-import {RoomProvider} from "./context/RoomContext.tsx";
 import ProtectedRoute from "./components/ProtectedRoute.tsx";
 import WaitingRoomPage from "./pages/rooms/WaitingRoomPage.tsx";
 
@@ -16,7 +15,6 @@ createRoot(document.getElementById('root')!).render(
     <StrictMode>
         <BrowserRouter>
             <UserProvider>
-                <RoomProvider>
                     <Routes>
                         <Route path="/" element={<CreateUserPage/>}/>
                         <Route element={<ProtectedRoute />}>
@@ -27,7 +25,6 @@ createRoot(document.getElementById('root')!).render(
                         <Route path="/rooms/:id" element={<WaitingRoomPage/>} />
                         </Route>
                     </Routes>
-                </RoomProvider>
             </UserProvider>
         </BrowserRouter>
     </StrictMode>,

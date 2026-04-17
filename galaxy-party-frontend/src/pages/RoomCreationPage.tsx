@@ -4,20 +4,27 @@ import backImg from '../assets/back.png'
 import HomeButton from '../components/HomeButton'
 import PrimaryButton from '../components/PrimaryButton'
 import AvatarCircle from '../components/AvatarCircle'
-import { useRoomContext } from '../hooks/useRoomContext'
 import { useUserContext } from '../hooks/useUserContext'
+import { useSocket } from '../hooks/useSocket'
+import socket from '../socket/client'
+import type { Room } from '../types/room/models'
 
 function RoomCreationPage() {
   const navigate = useNavigate()
-  const { createRoom } = useRoomContext()
   const { user } = useUserContext()
 
   const [name, setName] = useState('')
   const [password, setPassword] = useState('')
 
+  useSocket('room:created', (room: Room) => {
+    navigate(`/rooms/${room.id}`, { state: { room } })
+  })
+
   const handleCreate = () => {
     if (!name.trim() || !user) return
-    createRoom({ name: name.trim(), password: password || null, ownerId: user.id })
+    socket.emit('room:create', { name: name.trim(), password: password || null, ownerId: user.id }, (err?: string) => {
+      if (err) console.error(err)
+    })
   }
 
   return (

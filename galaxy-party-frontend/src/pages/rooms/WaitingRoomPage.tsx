@@ -1,14 +1,15 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import backImg from "../../assets/back.png";
 import HomeButton from "../../components/HomeButton.tsx";
 import { useUserContext } from "../../hooks/useUserContext.ts";
 import AvatarCircle from "../../components/AvatarCircle.tsx";
-import { useRoomContext } from "../../hooks/useRoomContext.ts";
+import type { Room } from "../../types/room/models.ts";
 
 function WaitingRoomPage() {
     const navigate = useNavigate();
+    const location = useLocation();
     const { user } = useUserContext()
-    const { room } = useRoomContext()
+    const room: Room | undefined = location.state?.room
 
     if (!room) {
         navigate('/menu')
