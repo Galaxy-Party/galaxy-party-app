@@ -1,22 +1,22 @@
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import backImg from '../assets/back.png'
 import HomeButton from '../components/HomeButton'
 import AvatarCircle from '../components/AvatarCircle'
+import {useUserContext} from "../hooks/useUserContext.ts";
 
 function RulesPage() {
+    const {user} = useUserContext();
   const navigate = useNavigate()
-  const location = useLocation()
-  const avatarIndex: number = location.state?.avatarIndex ?? 0
 
   return (
     <div
       className="relative w-full min-h-screen bg-cover bg-center bg-no-repeat"
       style={{ backgroundImage: `url(${backImg})` }}
     >
-      <HomeButton onClick={() => navigate('/menu', { state: { avatarIndex } })} />
+      <HomeButton onClick={() => navigate('/menu')} />
 
       <div className="relative flex justify-center pt-10">
-        <AvatarCircle avatarIndex={avatarIndex} className="" />
+        <AvatarCircle avatarFile={user?.imageName} />
       </div>
 
       <div
