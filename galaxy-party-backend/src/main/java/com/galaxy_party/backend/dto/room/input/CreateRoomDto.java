@@ -1,13 +1,17 @@
 package com.galaxy_party.backend.dto.room.input;
 
 import com.galaxy_party.backend.entity.RoomEntity;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.UUID;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class CreateRoomDto {
     private UUID id;
     private String name;

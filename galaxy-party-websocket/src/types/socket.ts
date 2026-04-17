@@ -1,10 +1,12 @@
 import {Hello} from "./models.js";
 import {CreateUserPayload, User} from "./user/models.js";
+import {CreateRoomPayload, Room} from "./room/models.js";
 
 export interface ServerToClientEvents {
     "hello:message": (hello: Hello) => void;
     "user:created": (user: User) => void;
     "user:received": (user:User) => void;
+    "room:created": (room: Room) => void;
 }
 
 export interface ClientToServerEvents {
@@ -15,6 +17,10 @@ export interface ClientToServerEvents {
     ) => void;
     "user:get": (
         id: string,
+        ack: (err?: string) => void
+    ) => void;
+    "room:create": (
+        payload: CreateRoomPayload,
         ack: (err?: string) => void
     ) => void;
 }

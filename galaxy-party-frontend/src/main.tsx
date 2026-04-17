@@ -15,16 +15,16 @@ createRoot(document.getElementById('root')!).render(
     <StrictMode>
         <BrowserRouter>
             <UserProvider>
-                <Routes>
-                    <Route path="/" element={<CreateUserPage/>}/>
-                    <Route element={<ProtectedRoute />}>
-                        <Route path="/menu" element={<MenuPage/>}/>
-                        <Route path="/rules" element={<RulesPage/>}/>
-                        <Route path="/create-room" element={<RoomCreationPage/>}/>
-                        <Route path="/rooms" element={<RoomListPage/>}/>
+                    <Routes>
+                        <Route path="/" element={<CreateUserPage/>}/>
+                        <Route element={<ProtectedRoute />}>
+                            <Route path="/menu" element={<MenuPage/>}/>
+                            <Route path="/rules" element={<RulesPage/>}/>
+                            <Route path="/create-room" element={<RoomCreationPage/>}/>
+                            <Route path="/rooms" element={<RoomListPage/>}/>
                         <Route path="/rooms/:id" element={<WaitingRoomPage/>} />
-                    </Route>
-                </Routes>
+                        </Route>
+                    </Routes>
             </UserProvider>
         </BrowserRouter>
     </StrictMode>,
