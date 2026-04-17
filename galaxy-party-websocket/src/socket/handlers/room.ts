@@ -1,11 +1,21 @@
-﻿import {TypedServer, TypedSocket} from "../../types/types.js";
+import {TypedServer, TypedSocket} from "../../types/types.js";
 import {CreateRoomPayload} from "../../types/room/models.js";
-import {createRoom, joinRoom} from "../../services/room.service.js";
+import {createRoom, getRooms, joinRoom} from "../../services/room.service.js";
 
 export function registerRoomHandlers(
     io: TypedServer,
     socket: TypedSocket
 ) {
+    socket.on("room:get_all", async (ack) => {
+        try {
+            const rooms = await getRooms();
+            socket.emit("room:list", rooms);
+            ack();
+        } catch (e) {
+            ack("Erreur serveur");
+        }
+    });
+
     socket.on("room:create", async (payload, ack) => {
         try {
             const { name, password, ownerId } = payload;
@@ -32,7 +42,7 @@ export function registerRoomHandlers(
 
             await joinRoom(room.id, ownerId, password);
 
-            socket.emit("room:created", room);
+            io.emit("room:created", room);
             ack();
         } catch (e) {
             ack("Erreur serveur");
