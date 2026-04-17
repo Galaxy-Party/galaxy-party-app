@@ -130,6 +130,7 @@ function WaitingRoomPage() {
                     <button
                         className="text-white text-lg px-20 py-3 rounded-2xl cursor-pointer border-2 tracking-wide transition-opacity hover:opacity-70"
                         style={{ backgroundColor: '#051240', borderColor: '#DEB992' }}
+                        onClick={() => navigate(`/rooms/${id}/game`, { state: { room } })}
                     >
                         Lancer la partie
                     </button>
