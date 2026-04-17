@@ -14,10 +14,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     const setUser = (user: User) => {
         setUserState(user);
         localStorage.setItem("galaxy-party-user-id", user.id);
-
         setIsLoading(false);
-
-        navigate("/menu");
     };
     const logout = () => {
         setUserState(null);
@@ -37,11 +34,12 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     }
 
     useSocket("user:created", (user) => {
-        setUser(user)
+        setUser(user);
+        navigate("/menu");
     })
 
     useSocket("user:received", (user) => {
-        setUser(user)
+        setUser(user);
     })
 
     useEffect(() => {
