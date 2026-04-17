@@ -15,6 +15,17 @@ function WaitingRoomPage() {
     const { id } = useParams<{ id: string }>();
     const { user } = useUserContext();
     const [showReturnModal, setShowReturnModal] = useState(false)
+    const [timer, setTimer] = useState(150)
+    const [isPrivate, setIsPrivate] = useState(false)
+    const [password, setPassword] = useState('')
+
+    const formatTimer = (s: number) => {
+        const m = Math.floor(s / 60)
+        const sec = s % 60
+        return `${m}:${sec.toString().padStart(2, '0')}`
+    }
+
+    const tickMarks = Array.from({ length: 17 }, (_, i) => 60 + i * 15)
 
     const [room, setRoom] = useState<Room | null>(null);
 
@@ -25,7 +36,10 @@ function WaitingRoomPage() {
         });
     }, [id, navigate]);
 
-    const handleRoomDetails = useCallback((r: Room) => setRoom(r), []);
+    const handleRoomDetails = useCallback((r: Room) => {
+        setRoom(r)
+        setIsPrivate(r.hasPassword)
+    }, []);
 
     const handleUserJoined = useCallback((newUser: User) => {
         setRoom(prev => {
@@ -113,14 +127,97 @@ function WaitingRoomPage() {
                             </h3>
 
                             <div className="flex flex-col gap-5">
-                                <div className="flex justify-between">
-                                    <span className="text-lg text-white">Timer</span>
-                                    <span className="text-lg text-white">2:30</span>
+                                <div className="flex flex-col gap-2">
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-lg text-white">Timer</span>
+                                        <span className="text-base tabular-nums" style={{ color: '#DEB992' }}>
+                                            {formatTimer(timer)}
+                                        </span>
+                                    </div>
+                                    <div className={`flex flex-col gap-1 ${!isOwner ? 'opacity-40 pointer-events-none' : ''}`}>
+                                        <input
+                                            type="range"
+                                            min={60}
+                                            max={300}
+                                            step={15}
+                                            value={timer}
+                                            onChange={e => setTimer(Number(e.target.value))}
+                                            className="w-full cursor-pointer accent-[#DEB992]"
+                                        />
+                                        <div className="flex justify-between px-0.5">
+                                            {tickMarks.map(t => (
+                                                <div key={t} className="flex flex-col items-center gap-0.5">
+                                                    <div
+                                                        className="w-px"
+                                                        style={{
+                                                            height: t % 60 === 0 ? '6px' : '3px',
+                                                            backgroundColor: t === timer ? '#DEB992' : t % 60 === 0 ? 'rgba(222,185,146,0.4)' : 'rgba(78,128,152,0.35)',
+                                                        }}
+                                                    />
+                                                    {t % 60 === 0 && (
+                                                        <span style={{ fontSize: '8px', color: t === timer ? '#DEB992' : '#4E8098' }}>
+                                                            {formatTimer(t)}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
                                 </div>
 
-                                <div className="flex justify-between">
-                                    <span className="text-lg text-white">Mot de passe</span>
-                                    <span className="text-lg text-white">{room.hasPassword ? '********' : 'Aucun'}</span>
+                                <div className="flex flex-col gap-2">
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-lg text-white">Salon</span>
+                                        <div className="flex items-center gap-1 rounded-xl p-0.5" style={{ backgroundColor: '#0a1f5c' }}>
+                                            <button
+                                                disabled={!isOwner}
+                                                onClick={() => { setIsPrivate(false); setPassword('') }}
+                                                className="px-3 py-1 rounded-lg text-sm transition-all cursor-pointer disabled:cursor-not-allowed"
+                                                style={{
+                                                    backgroundColor: !isPrivate ? '#DEB992' : 'transparent',
+                                                    color: !isPrivate ? '#051240' : 'rgba(255,255,255,0.8)',
+                                                    fontWeight: !isPrivate ? 600 : 400,
+                                                }}
+                                            >
+                                                Public
+                                            </button>
+                                            <button
+                                                disabled={!isOwner}
+                                                onClick={() => setIsPrivate(true)}
+                                                className="px-3 py-1 rounded-lg text-sm transition-all cursor-pointer disabled:cursor-not-allowed"
+                                                style={{
+                                                    backgroundColor: isPrivate ? '#DEB992' : 'transparent',
+                                                    color: isPrivate ? '#051240' : 'rgba(255,255,255,0.8)',
+                                                    fontWeight: isPrivate ? 600 : 400,
+                                                }}
+                                            >
+                                                Privé
+                                            </button>
+                                        </div>
+                                    </div>
+                                    {isPrivate && (
+                                        <div className="flex items-center gap-2">
+                                            <input
+                                                type="text"
+                                                value={password}
+                                                onChange={e => setPassword(e.target.value)}
+                                                placeholder="Mot de passe..."
+                                                disabled={!isOwner}
+                                                className="flex-1 bg-transparent text-white text-sm outline-none pb-1 placeholder-white/30 disabled:opacity-40 disabled:cursor-not-allowed"
+                                                style={{ borderBottom: '1px solid #DEB992' }}
+                                            />
+                                            {isOwner && (
+                                                <button
+                                                    className="px-3 py-1 rounded-lg text-sm font-semibold transition-opacity hover:opacity-70 cursor-pointer"
+                                                    style={{ backgroundColor: '#DEB992', color: '#051240' }}
+                                                >
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                                        <polyline points="20 6 9 17 4 12"/>
+                                                    </svg>
+                                                </button>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>
