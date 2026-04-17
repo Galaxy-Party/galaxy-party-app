@@ -32,6 +32,9 @@ public class RoomEntity {
     @Column
     private String name;
 
+    @Column
+    private String password;
+
     @OneToMany(mappedBy = "room")
     private List<UserEntity> users = new ArrayList<>();
 
@@ -39,6 +42,7 @@ public class RoomEntity {
         return RoomDto.builder()
                 .id(roomEntity.getId())
                 .name(roomEntity.getName())
+                .hasPassword(roomEntity.getPassword() != null && !roomEntity.getPassword().isEmpty())
                 .build();
     }
 }

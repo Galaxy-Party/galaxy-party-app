@@ -7,6 +7,7 @@ import com.galaxy_party.backend.repository.RoomRepository;
 import com.galaxy_party.backend.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -19,6 +20,7 @@ public class RoomService {
 
     private final RoomRepository roomRepository;
     private final UserRepository userRepository;
+    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     public List<RoomEntity> findAll() {
         return roomRepository.findAll();
@@ -29,7 +31,11 @@ public class RoomService {
     }
 
     public RoomEntity createRoom(CreateRoomDto createRoomDto) {
-        return roomRepository.save(CreateRoomDto.toRoomEntity(createRoomDto));
+        RoomEntity room = CreateRoomDto.toRoomEntity(createRoomDto);
+        if (room.getPassword() != null && !room.getPassword().isEmpty()) {
+            room.setPassword(passwordEncoder.encode(room.getPassword()));
+        }
+        return roomRepository.save(room);
     }
 
     public void deleteRoom(UUID id) {
@@ -47,11 +53,18 @@ public class RoomService {
 
 
 
-    public Boolean joinRoom(UUID roomId, UUID userId) {
+    public Boolean joinRoom(UUID roomId, UUID userId, String password) {
         UserEntity userEntity = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         RoomEntity room = this.findById(roomId);
+
+        String roomPassword = room.getPassword();
+        if (roomPassword != null && !roomPassword.isEmpty()) {
+            if (password == null || !passwordEncoder.matches(password, roomPassword)) {
+                throw new RuntimeException("Invalid password");
+            }
+        }
 
         List<UserEntity> users = room.getUsers();
 

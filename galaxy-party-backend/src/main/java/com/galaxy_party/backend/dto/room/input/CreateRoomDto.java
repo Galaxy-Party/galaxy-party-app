@@ -11,11 +11,13 @@ import java.util.UUID;
 public class CreateRoomDto {
     private UUID id;
     private String name;
+    private String password;
 
     public static RoomEntity toRoomEntity(CreateRoomDto createRoomDto) {
         return RoomEntity.builder()
                 .id(createRoomDto.getId())
                 .name(createRoomDto.getName())
+                .password(createRoomDto.getPassword())
                 .build();
     }
 }
