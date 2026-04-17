@@ -55,6 +55,7 @@ function WaitingRoomPage() {
 
     if (!room) return null;
 
+    const isOwner = user?.id === room.ownerId;
     const opponent = room.users.find(u => u.id !== user?.id) ?? null;
 
     const handleLeave = () => {
@@ -102,7 +103,7 @@ function WaitingRoomPage() {
                             </span>
                         </div>
                     </div>
-                    <div className="flex-col w-1/2">
+                    <div className={`flex-col w-1/2 ${!isOwner ? 'opacity-50 pointer-events-none select-none' : ''}`}>
                         <div
                             className="flex flex-col w-full h-full rounded-2xl border-2 px-10 py-5"
                             style={{ backgroundColor: '#051240', borderColor: '#DEB992'}}
@@ -128,9 +129,10 @@ function WaitingRoomPage() {
 
                 <div className="flex justify-end">
                     <button
-                        className="text-white text-lg px-20 py-3 rounded-2xl cursor-pointer border-2 tracking-wide transition-opacity hover:opacity-70"
-                        style={{ backgroundColor: '#051240', borderColor: '#DEB992' }}
+                        disabled={!isOwner}
                         onClick={() => navigate(`/rooms/${id}/game`, { state: { room } })}
+                        className={`text-white text-lg px-20 py-3 rounded-2xl border-2 tracking-wide transition-opacity ${isOwner ? 'cursor-pointer hover:opacity-70' : 'opacity-40 cursor-not-allowed'}`}
+                        style={{ backgroundColor: '#051240', borderColor: '#DEB992' }}
                     >
                         Lancer la partie
                     </button>
