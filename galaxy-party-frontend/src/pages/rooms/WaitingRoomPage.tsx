@@ -1,35 +1,16 @@
-import {useNavigate, useParams} from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import backImg from "../../assets/back.png";
 import HomeButton from "../../components/HomeButton.tsx";
-import {useUserContext} from "../../hooks/useUserContext.ts";
+import { useUserContext } from "../../hooks/useUserContext.ts";
 import AvatarCircle from "../../components/AvatarCircle.tsx";
-
-const FAKE_ROOMS = [
-    { id: 1, name: 'Kohaku' },
-    { id: 2, name: 'Kiki' },
-    { id: 3, name: 'Mika' },
-    { id: 4, name: 'Spike' },
-    { id: 5, name: 'Galaxy Party' },
-    { id: 6, name: 'Nebula Squad' },
-    { id: 7, name: 'StarDust' },
-    { id: 8, name: 'Cosmic Crew' },
-    { id: 9, name: 'Luna Party' },
-    { id: 10, name: 'Orion' },
-    { id: 11, name: 'Andromeda' },
-    { id: 12, name: 'Nova Club' },
-    { id: 13, name: 'Black Hole' },
-    { id: 14, name: 'Supernova' },
-    { id: 15, name: 'Pulsar' },
-]
+import { useRoomContext } from "../../hooks/useRoomContext.ts";
 
 function WaitingRoomPage() {
-    const {id} = useParams()
-    const {user} = useUserContext()
-
     const navigate = useNavigate();
-    const currentRoom = FAKE_ROOMS.find(r => r.id === Number(id))
+    const { user } = useUserContext()
+    const { room } = useRoomContext()
 
-    if (!currentRoom) {
+    if (!room) {
         navigate('/menu')
         return;
     }
@@ -45,19 +26,19 @@ function WaitingRoomPage() {
                 style={{ backgroundColor: '#051240', borderColor: '#DEB992'}}
             >
                 <h1 className="text-center text-5xl font-bold" style={{ color: '#4E8098' }}>
-                    {currentRoom.name}
+                    {room.name}
                 </h1>
 
                 <div className="flex h-full" >
                     <div className="flex-col w-1/2 gap-8">
                         <div className="flex items-center gap-5">
                             <AvatarCircle avatarFile={user?.imageName}/>
-                            <span className="text-2xl">{user?.username}</span>
+                            <span className="text-2xl text-white">{user?.username}</span>
                         </div>
 
-                        <div className="flex items-center gap-5">
-                            <AvatarCircle avatarFile={user?.imageName}/>
-                            <span className="text-2xl">{user?.username}</span>
+                        <div className="flex items-center gap-5 mt-4 opacity-40">
+                            <AvatarCircle avatarFile={null}/>
+                            <span className="text-2xl text-white">En attente...</span>
                         </div>
                     </div>
                     <div className="flex-col w-1/2">
@@ -66,18 +47,18 @@ function WaitingRoomPage() {
                             style={{ backgroundColor: '#051240', borderColor: '#DEB992'}}
                         >
                             <h3 className="text-center text-2xl mb-8 bold" style={{ color: '#4E8098' }}>
-                                Paramètre
+                                Paramètres
                             </h3>
 
                             <div className="flex flex-col gap-5">
                                 <div className="flex justify-between">
-                                    <span className="text-lg">Timer</span>
-                                    <span className="text-lg">1:30</span>
+                                    <span className="text-lg text-white">Timer</span>
+                                    <span className="text-lg text-white">2:30</span>
                                 </div>
 
                                 <div className="flex justify-between">
-                                    <span className="text-lg">Mot de passe</span>
-                                    <span className="text-lg">********</span>
+                                    <span className="text-lg text-white">Mot de passe</span>
+                                    <span className="text-lg text-white">{room.hasPassword ? '********' : 'Aucun'}</span>
                                 </div>
                             </div>
                         </div>
@@ -91,7 +72,6 @@ function WaitingRoomPage() {
                     >
                         Lancer la partie
                     </button>
-
                 </div>
             </div>
         </div>
