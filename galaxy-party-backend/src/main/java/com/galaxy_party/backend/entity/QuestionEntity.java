@@ -46,6 +46,7 @@ public class QuestionEntity {
         return QuestionDto.builder()
                 .id(questionEntity.getId())
                 .label(questionEntity.getLabel())
+                .answers(questionEntity.getAnswers().stream().map(AnswerEntity::toAnswerDto).toList())
                 .build();
     }
 }
