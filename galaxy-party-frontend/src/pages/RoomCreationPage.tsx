@@ -15,6 +15,7 @@ function RoomCreationPage() {
 
   const [name, setName] = useState('')
   const [password, setPassword] = useState('')
+  const [hasPassword, setHasPassword] = useState(false)
 
   useSocket('room:created', (room: Room) => {
     navigate(`/rooms/${room.id}`, { state: { room } })
@@ -49,14 +50,27 @@ function RoomCreationPage() {
         </div>
 
         <div className="flex flex-col items-center gap-3">
-          <label className="text-white text-xl font-light">Entrez le mot de passe :</label>
-          <input
-            type="password"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            className="border-b-2 text-white text-center outline-none w-72 pb-2 text-lg"
-            style={{ borderColor: '#DEB992', background: 'none' }}
-          />
+          <label className="flex items-center gap-3 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={hasPassword}
+              onChange={e => {
+                setHasPassword(e.target.checked)
+                if (!e.target.checked) setPassword('')
+              }}
+              className="w-4 h-4 accent-[#DEB992] cursor-pointer"
+            />
+            <span className="text-white text-xl font-light">Ajouter un mot de passe</span>
+          </label>
+          {hasPassword && (
+            <input
+              type="password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              className="border-b-2 text-white text-center outline-none w-72 pb-2 text-lg"
+              style={{ borderColor: '#DEB992', background: 'none' }}
+            />
+          )}
         </div>
 
         <PrimaryButton width="280px" height="65px" onClick={handleCreate}>
