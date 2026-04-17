@@ -1,8 +1,10 @@
+import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import backImg from "../../assets/back.png";
 import HomeButton from "../../components/HomeButton.tsx";
 import { useUserContext } from "../../hooks/useUserContext.ts";
 import AvatarCircle from "../../components/AvatarCircle.tsx";
+import ReturnMenuModal from "../../components/ReturnMenuModal.tsx";
 import type { Room } from "../../types/room/models.ts";
 
 function WaitingRoomPage() {
@@ -10,10 +12,21 @@ function WaitingRoomPage() {
     const location = useLocation();
     const { user } = useUserContext()
     const room: Room | undefined = location.state?.room
+    const [showReturnModal, setShowReturnModal] = useState(false)
+
+    const isSolo = true
 
     if (!room) {
         navigate('/menu')
         return;
+    }
+
+    const handleHomeClick = () => {
+        if (isSolo) {
+            setShowReturnModal(true)
+        } else {
+            navigate('/menu')
+        }
     }
 
     return (
@@ -21,7 +34,8 @@ function WaitingRoomPage() {
             className="flex flex-col items-center justify-center w-full min-h-screen bg-cover bg-center bg-no-repeat p-32"
             style={{backgroundImage: `url(${backImg})`}}
         >
-            <HomeButton onClick={() => navigate('/menu')} />
+            <HomeButton onClick={handleHomeClick} />
+
             <div
                 className="flex flex-col w-full rounded-2xl border-2 p-10 gap-8"
                 style={{ backgroundColor: '#051240', borderColor: '#DEB992'}}
@@ -75,6 +89,13 @@ function WaitingRoomPage() {
                     </button>
                 </div>
             </div>
+
+            {showReturnModal && (
+                <ReturnMenuModal
+                    onClose={() => setShowReturnModal(false)}
+                    onConfirm={() => navigate('/menu')}
+                />
+            )}
         </div>
     )
 }
