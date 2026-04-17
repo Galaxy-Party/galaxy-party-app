@@ -60,12 +60,14 @@ function WaitingRoomPage() {
     }, []);
 
     const handleRoomDeleted = useCallback(() => navigate('/menu'), [navigate]);
+    const handleGameLoading = useCallback(() => navigate(`/rooms/${id}/game`), [navigate, id]);
 
     useSocket("room:details", handleRoomDetails);
     useSocket("room:user_joined", handleUserJoined);
     useSocket("room:user_left", handleUserLeft);
     useSocket("room:owner_changed", handleOwnerChanged);
     useSocket("room:deleted", handleRoomDeleted);
+    useSocket("game:loading", handleGameLoading);
 
     if (!room) return null;
 
@@ -226,9 +228,9 @@ function WaitingRoomPage() {
 
                 <div className="flex justify-end">
                     <button
-                        disabled={!isOwner}
-                        onClick={() => navigate(`/rooms/${id}/game`, { state: { room } })}
-                        className={`text-white text-lg px-20 py-3 rounded-2xl border-2 tracking-wide transition-opacity ${isOwner ? 'cursor-pointer hover:opacity-70' : 'opacity-40 cursor-not-allowed'}`}
+                        disabled={!isOwner || room.users.length < 2}
+                        onClick={() => socket.emit('game:start', id!, (err) => { if (err) console.error(err); })}
+                        className={`text-white text-lg px-20 py-3 rounded-2xl border-2 tracking-wide transition-opacity ${isOwner && room.users.length >= 2 ? 'cursor-pointer hover:opacity-70' : 'opacity-40 cursor-not-allowed'}`}
                         style={{ backgroundColor: '#051240', borderColor: '#DEB992' }}
                     >
                         Lancer la partie

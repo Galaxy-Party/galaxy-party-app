@@ -3,6 +3,9 @@ import type {CreateUserPayload, User} from "./user/models.ts";
 import type {CreateRoomPayload, Room} from "./room/models.ts";
 
 export interface ServerToClientEvents {
+    "game:loading": () => void;
+    "game:countdown": (count: number) => void;
+    "game:started": (data: { currentPlayerId: string }) => void;
     "hello:message": (hello: Hello) => void;
     "user:created": (user: User) => void;
     "user:received": (user:User) => void;
@@ -30,6 +33,8 @@ export interface ClientToServerEvents {
         ack: (err?: string) => void
     ) => void;
     "room:get_all": (ack: (err?: string) => void) => void;
+    "game:start": (roomId: string, ack: (err?: string) => void) => void;
+    "game:player_ready": (roomId: string, ack: (err?: string) => void) => void;
     "room:delete": (roomId: string, ack: (err?: string) => void) => void;
     "room:get": (roomId: string, ack: (err?: string) => void) => void;
     "room:leave": (payload: { roomId: string; userId: string }, ack: (err?: string) => void) => void;
