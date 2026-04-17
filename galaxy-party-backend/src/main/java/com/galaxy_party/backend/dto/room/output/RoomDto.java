@@ -11,4 +11,5 @@ public class RoomDto {
     private UUID id;
     private String name;
     private boolean hasPassword;
+    private UUID ownerId;
 }
