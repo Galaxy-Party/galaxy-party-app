@@ -229,7 +229,7 @@ function WaitingRoomPage() {
                 <div className="flex justify-end">
                     <button
                         disabled={!isOwner || room.users.length < 2}
-                        onClick={() => socket.emit('game:start', id!, (err) => { if (err) console.error(err); })}
+                        onClick={() => socket.emit('game:start', { roomId: id!, userId: user!.id }, (err) => { if (err) console.error(err); })}
                         className={`text-white text-lg px-20 py-3 rounded-2xl border-2 tracking-wide transition-opacity ${isOwner && room.users.length >= 2 ? 'cursor-pointer hover:opacity-70' : 'opacity-40 cursor-not-allowed'}`}
                         style={{ backgroundColor: '#051240', borderColor: '#DEB992' }}
                     >
