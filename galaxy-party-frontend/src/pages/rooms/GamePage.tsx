@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import backImg from "../../assets/back.png";
 import { useUserContext } from "../../hooks/useUserContext.ts";
@@ -6,6 +6,13 @@ import ModalButton from "../../components/ModalButton.tsx";
 import { useSocket } from "../../hooks/useSocket.ts";
 import socket from "../../socket/client.ts";
 import type { Room } from "../../types/room/models.ts";
+
+function formatTime(ms: number): string {
+    const totalSec = Math.max(0, Math.floor(ms / 1000));
+    const m = Math.floor(totalSec / 60);
+    const s = totalSec % 60;
+    return `${m}:${s.toString().padStart(2, "0")}`;
+}
 
 function GamePage() {
     const navigate = useNavigate();
@@ -18,8 +25,14 @@ function GamePage() {
     const [question, setQuestion] = useState<{ id: string; label: string } | null>(null);
     const [answer, setAnswer] = useState("");
     const [answerResult, setAnswerResult] = useState<{ correct: boolean; correctAnswer: string } | null>(null);
+    const [playerTimes, setPlayerTimes] = useState<Record<string, number>>({});
+
+    const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
     const opponent = room?.users.find(u => u.id !== user?.id) ?? null;
+    const isMyTurn = currentPlayerId === user?.id;
+    const myTime = user ? (playerTimes[user.id] ?? 0) : 0;
+    const opponentTime = opponent ? (playerTimes[opponent.id] ?? 0) : 0;
 
     useEffect(() => {
         if (!id || !user) return;
@@ -27,20 +40,43 @@ function GamePage() {
         socket.emit("game:player_ready", { roomId: id, userId: user.id }, (err) => { if (err) console.error(err); });
     }, [id, user]);
 
+    // Timer: défile sur les deux clients pour le joueur courant, pause pendant le feedback
+    useEffect(() => {
+        if (!currentPlayerId || answerResult !== null || !id || !user) return;
+
+        timerRef.current = setInterval(() => {
+            setPlayerTimes(prev => {
+                const current = prev[currentPlayerId] ?? 0;
+                if (current <= 1000) {
+                    clearInterval(timerRef.current!);
+                    if (currentPlayerId === user.id) {
+                        socket.emit("game:time_up", { roomId: id, userId: user.id }, () => {});
+                    }
+                    return { ...prev, [currentPlayerId]: 0 };
+                }
+                return { ...prev, [currentPlayerId]: current - 1000 };
+            });
+        }, 1000);
+
+        return () => { if (timerRef.current) clearInterval(timerRef.current); };
+    }, [currentPlayerId, answerResult, id, user]);
+
     const handleRoomDetails = useCallback((r: Room) => setRoom(r), []);
     const handleCountdown = useCallback((count: number) => setCountdown(count), []);
     const handleGameStarted = useCallback(({ currentPlayerId }: { currentPlayerId: string }) => {
         setCurrentPlayerId(currentPlayerId);
         setCountdown(null);
     }, []);
-    const handleQuestion = useCallback(({ question, currentPlayerId }: { question: { id: string; label: string }; currentPlayerId: string }) => {
+    const handleQuestion = useCallback(({ question, currentPlayerId, playerTimes }: { question: { id: string; label: string }; currentPlayerId: string; playerTimes: Record<string, number> }) => {
         setQuestion(question);
         setCurrentPlayerId(currentPlayerId);
+        setPlayerTimes(playerTimes);
         setAnswer("");
         setAnswerResult(null);
     }, []);
-    const handleAnswerResult = useCallback(({ correct, correctAnswer }: { correct: boolean; correctAnswer: string; answeredBy: string }) => {
+    const handleAnswerResult = useCallback(({ correct, correctAnswer, playerTimes }: { correct: boolean; correctAnswer: string; answeredBy: string; playerTimes: Record<string, number> }) => {
         setAnswerResult({ correct, correctAnswer });
+        setPlayerTimes(playerTimes);
     }, []);
 
     useSocket("room:details", handleRoomDetails);
@@ -49,12 +85,11 @@ function GamePage() {
     useSocket("game:question", handleQuestion);
     useSocket("game:answer_result", handleAnswerResult);
 
-    const isMyTurn = currentPlayerId === user?.id;
-
     const submitAnswer = useCallback(() => {
         if (currentPlayerId !== user?.id || !answer.trim() || !id || !user) return;
         socket.emit("game:answer", { roomId: id, userId: user.id, answer }, (err) => { if (err) console.error(err); });
     }, [currentPlayerId, user, answer, id]);
+
     const accentColor = "#DEB992";
 
     const activeRingStyle: React.CSSProperties = {
@@ -103,6 +138,8 @@ function GamePage() {
 
             <div className="flex flex-col items-center justify-center flex-1 gap-10 px-16 py-24">
                 <div className="flex w-full items-center justify-center gap-16">
+
+                    {/* Mon avatar */}
                     <div className="flex flex-col items-center gap-3 w-48">
                         <div style={isMyTurn ? activeRingStyle : inactiveRingStyle}>
                             <div className="w-44 h-44 rounded-full overflow-hidden flex items-center justify-center" style={{ backgroundColor: "#051240" }}>
@@ -113,19 +150,23 @@ function GamePage() {
                             {user?.username ?? "Joueur 1"}
                         </span>
                         {!isMyTurn && (
-                            <span className="text-xl font-bold" style={{ color: "#4E8098", opacity: 0.5 }}>0:45</span>
+                            <span className="text-xl font-bold tabular-nums" style={{ color: "#4E8098", opacity: 0.5 }}>
+                                {formatTime(myTime)}
+                            </span>
                         )}
                     </div>
 
+                    {/* Timer central (joueur courant) */}
                     <div className="flex flex-col items-center gap-1">
                         <span className="tabular-nums" style={{ color: accentColor, fontSize: "6rem", lineHeight: 1 }}>
-                            1:30
+                            {formatTime(isMyTurn ? myTime : opponentTime)}
                         </span>
                         <span className="text-xs tracking-widest uppercase" style={{ color: accentColor, opacity: 0.6 }}>
                             {isMyTurn ? `Tour de ${user?.username ?? "Joueur 1"}` : `Tour de ${opponent?.username ?? "Joueur 2"}`}
                         </span>
                     </div>
 
+                    {/* Avatar adversaire */}
                     <div className="flex flex-col items-center gap-3 w-48">
                         <div style={!isMyTurn ? activeRingStyle : inactiveRingStyle}>
                             <div className="w-44 h-44 rounded-full overflow-hidden flex items-center justify-center" style={{ backgroundColor: "#051240" }}>
@@ -136,7 +177,9 @@ function GamePage() {
                             {opponent?.username ?? "Joueur 2"}
                         </span>
                         {isMyTurn && (
-                            <span className="text-xl font-bold" style={{ color: "#4E8098", opacity: 0.5 }}>0:45</span>
+                            <span className="text-xl font-bold tabular-nums" style={{ color: "#4E8098", opacity: 0.5 }}>
+                                {formatTime(opponentTime)}
+                            </span>
                         )}
                     </div>
                 </div>

@@ -22,4 +22,5 @@ export interface GameSession {
     currentPlayerId: string;
     readyPlayers: Set<string>;
     players: Map<string, PlayerGameState>;
+    turnStartedAt: number | null;
 }
