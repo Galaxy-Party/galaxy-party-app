@@ -125,6 +125,16 @@ export function registerGameHandlers(io: TypedServer, socket: TypedSocket) {
         }
     });
 
+    socket.on('game:quit', ({ roomId }, ack) => {
+        try {
+            deleteSession(roomId);
+            io.to(roomId).emit('game:player_quit');
+            ack();
+        } catch (e) {
+            ack('Erreur serveur');
+        }
+    });
+
     socket.on('game:time_up', ({ roomId, userId }, ack) => {
         try {
             const session = getSession(roomId);
