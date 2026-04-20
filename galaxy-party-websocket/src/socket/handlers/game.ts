@@ -1,6 +1,6 @@
 import { TypedServer, TypedSocket } from '../../types/types.js';
 import { getQuestions } from '../../services/game.service.js';
-import { getSession, setSession } from '../../store/game.store.js';
+import { getSession, setSession, deleteSession } from '../../store/game.store.js';
 import { GameSession } from '../../types/game/models.js';
 
 function normalize(str: string): string {
@@ -134,10 +134,10 @@ export function registerGameHandlers(io: TypedServer, socket: TypedSocket) {
             deductElapsed(session, userId);
 
             const players = [...session.players.keys()];
-            session.currentPlayerId = players.find(id => id !== userId) ?? userId;
-            session.currentQuestionIndex++;
+            const winnerId = players.find(id => id !== userId) ?? userId;
 
-            setTimeout(() => emitQuestion(io, session), 1000);
+            deleteSession(roomId);
+            io.to(roomId).emit('game:over', { winnerId });
             ack();
         } catch (e) {
             ack('Erreur serveur');
