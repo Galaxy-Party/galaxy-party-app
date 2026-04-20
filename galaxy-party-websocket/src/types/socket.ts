@@ -8,6 +8,7 @@ export interface ServerToClientEvents {
     "game:started": (data: { currentPlayerId: string }) => void;
     "game:question": (data: { question: { id: string; label: string }; currentPlayerId: string; playerTimes: Record<string, number> }) => void;
     "game:answer_result": (data: { correct: boolean; correctAnswer: string; answeredBy: string; playerTimes: Record<string, number> }) => void;
+    "game:over": (data: { winnerId: string }) => void;
     "hello:message": (hello: Hello) => void;
     "user:created": (user: User) => void;
     "user:received": (user:User) => void;

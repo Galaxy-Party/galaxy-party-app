@@ -26,6 +26,7 @@ function GamePage() {
     const [answer, setAnswer] = useState("");
     const [answerResult, setAnswerResult] = useState<{ correct: boolean; correctAnswer: string } | null>(null);
     const [playerTimes, setPlayerTimes] = useState<Record<string, number>>({});
+    const [winnerId, setWinnerId] = useState<string | null>(null);
 
     const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -78,12 +79,16 @@ function GamePage() {
         setAnswerResult({ correct, correctAnswer });
         setPlayerTimes(playerTimes);
     }, []);
+    const handleGameOver = useCallback(({ winnerId }: { winnerId: string }) => {
+        setWinnerId(winnerId);
+    }, []);
 
     useSocket("room:details", handleRoomDetails);
     useSocket("game:countdown", handleCountdown);
     useSocket("game:started", handleGameStarted);
     useSocket("game:question", handleQuestion);
     useSocket("game:answer_result", handleAnswerResult);
+    useSocket("game:over", handleGameOver);
 
     const submitAnswer = useCallback(() => {
         if (currentPlayerId !== user?.id || !answer.trim() || !id || !user) return;
@@ -111,6 +116,29 @@ function GamePage() {
             {currentPlayerId === null && countdown === null && (
                 <div className="absolute inset-0 flex items-center justify-center z-20" style={{ backgroundColor: "rgba(5,18,64,0.85)" }}>
                     <span className="text-white text-3xl tracking-widest animate-pulse">Chargement...</span>
+                </div>
+            )}
+
+            {/* Game over modal */}
+            {winnerId !== null && (
+                <div className="absolute inset-0 flex items-center justify-center z-30" style={{ backgroundColor: "rgba(5,18,64,0.92)" }}>
+                    <div className="flex flex-col items-center gap-8 rounded-3xl border px-16 py-12" style={{ backgroundColor: "#051240", borderColor: accentColor, boxShadow: `0 0 40px ${accentColor}44` }}>
+                        <span className="text-5xl font-bold tracking-wide" style={{ color: accentColor }}>
+                            {winnerId === user?.id ? "Victoire !" : "Défaite..."}
+                        </span>
+                        <span className="text-xl text-white/80 tracking-wide">
+                            {winnerId === user?.id
+                                ? `Bravo ${user?.username ?? ""}, tu as gagné !`
+                                : `${room?.users.find(u => u.id === winnerId)?.username ?? "L'adversaire"} a gagné.`}
+                        </span>
+                        <button
+                            onClick={() => navigate(`/rooms/${id}`)}
+                            className="px-16 py-3 rounded-2xl text-white text-base tracking-widest uppercase border cursor-pointer transition-all hover:opacity-80"
+                            style={{ backgroundColor: "#051240", borderColor: accentColor, boxShadow: `0 0 16px ${accentColor}33` }}
+                        >
+                            Retour au salon
+                        </button>
+                    </div>
                 </div>
             )}
 
