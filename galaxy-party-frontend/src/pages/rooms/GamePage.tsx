@@ -17,6 +17,7 @@ function GamePage() {
     const [currentPlayerId, setCurrentPlayerId] = useState<string | null>(null);
     const [question, setQuestion] = useState<{ id: string; label: string } | null>(null);
     const [answer, setAnswer] = useState("");
+    const [answerResult, setAnswerResult] = useState<{ correct: boolean; correctAnswer: string } | null>(null);
 
     const opponent = room?.users.find(u => u.id !== user?.id) ?? null;
 
@@ -35,14 +36,25 @@ function GamePage() {
     const handleQuestion = useCallback(({ question, currentPlayerId }: { question: { id: string; label: string }; currentPlayerId: string }) => {
         setQuestion(question);
         setCurrentPlayerId(currentPlayerId);
+        setAnswer("");
+        setAnswerResult(null);
+    }, []);
+    const handleAnswerResult = useCallback(({ correct, correctAnswer }: { correct: boolean; correctAnswer: string; answeredBy: string }) => {
+        setAnswerResult({ correct, correctAnswer });
     }, []);
 
     useSocket("room:details", handleRoomDetails);
     useSocket("game:countdown", handleCountdown);
     useSocket("game:started", handleGameStarted);
     useSocket("game:question", handleQuestion);
+    useSocket("game:answer_result", handleAnswerResult);
 
     const isMyTurn = currentPlayerId === user?.id;
+
+    const submitAnswer = useCallback(() => {
+        if (currentPlayerId !== user?.id || !answer.trim() || !id || !user) return;
+        socket.emit("game:answer", { roomId: id, userId: user.id, answer }, (err) => { if (err) console.error(err); });
+    }, [currentPlayerId, user, answer, id]);
     const accentColor = "#DEB992";
 
     const activeRingStyle: React.CSSProperties = {
@@ -136,17 +148,24 @@ function GamePage() {
                 </div>
 
                 <div className="w-full max-w-xl flex flex-col items-center gap-6">
+                    {answerResult && (
+                        <div className="text-center text-lg font-semibold tracking-wide" style={{ color: answerResult.correct ? "#4caf50" : "#e53935" }}>
+                            {answerResult.correct ? "Bonne réponse !" : `Mauvaise réponse — La bonne réponse était : ${answerResult.correctAnswer}`}
+                        </div>
+                    )}
                     <input
                         type="text"
                         value={answer}
                         onChange={(e) => setAnswer(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === "Enter") submitAnswer(); }}
                         placeholder="Votre réponse..."
-                        disabled={!isMyTurn}
+                        disabled={!isMyTurn || answerResult !== null}
                         className="w-full bg-transparent text-white text-xl text-center outline-none placeholder-white/30 pb-3 tracking-wide disabled:opacity-30"
                         style={{ borderBottom: "2px solid #DEB992" }}
                     />
                     <button
-                        disabled={!isMyTurn}
+                        disabled={!isMyTurn || answerResult !== null}
+                        onClick={submitAnswer}
                         className="px-16 py-3 rounded-2xl text-white text-base tracking-widest uppercase border transition-all hover:opacity-80 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
                         style={{ backgroundColor: "#051240", borderColor: "#DEB992", boxShadow: "0 0 16px #DEB99233" }}
                     >
