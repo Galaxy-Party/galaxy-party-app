@@ -6,10 +6,32 @@ import { GameSession } from '../../types/game/models.js';
 function normalize(str: string): string {
     return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, '');
 }
-//TODO: Ajouter les paramètres des rooms
+
+function getPlayerTimes(session: GameSession): Record<string, number> {
+    return Object.fromEntries([...session.players.entries()].map(([id, p]) => [id, p.timeRemaining]));
+}
+
+function emitQuestion(io: TypedServer, session: GameSession): void {
+    if (session.currentQuestionIndex >= session.questions.length) return;
+    const question = session.questions[session.currentQuestionIndex];
+    session.turnStartedAt = Date.now();
+    io.to(session.roomId).emit('game:question', {
+        question: { id: question.id, label: question.label },
+        currentPlayerId: session.currentPlayerId,
+        playerTimes: getPlayerTimes(session),
+    });
+}
+
+function deductElapsed(session: GameSession, userId: string): void {
+    if (session.turnStartedAt === null) return;
+    const elapsed = Date.now() - session.turnStartedAt;
+    const player = session.players.get(userId);
+    if (player) player.timeRemaining = Math.max(0, player.timeRemaining - elapsed);
+    session.turnStartedAt = null;
+}
+
 const TIMER_MS = 150_000; // 2:30
 
-//TODO: refactor cette merde
 export function registerGameHandlers(io: TypedServer, socket: TypedSocket) {
 
     socket.on('game:start', async ({ roomId, userId }, ack) => {
@@ -32,6 +54,7 @@ export function registerGameHandlers(io: TypedServer, socket: TypedSocket) {
                 currentPlayerId: userId,
                 readyPlayers: new Set(),
                 players: new Map(),
+                turnStartedAt: null,
             };
 
             setSession(roomId, session);
@@ -62,12 +85,7 @@ export function registerGameHandlers(io: TypedServer, socket: TypedSocket) {
                 } else {
                     clearInterval(interval);
                     io.to(roomId).emit('game:started', { currentPlayerId: session.currentPlayerId });
-
-                    const question = session.questions[session.currentQuestionIndex];
-                    io.to(roomId).emit('game:question', {
-                        question: { id: question.id, label: question.label },
-                        currentPlayerId: session.currentPlayerId,
-                    });
+                    emitQuestion(io, session);
                 }
             }, 1000);
         } catch (e) {
@@ -81,11 +99,18 @@ export function registerGameHandlers(io: TypedServer, socket: TypedSocket) {
             if (!session) return ack('Session introuvable');
             if (session.currentPlayerId !== userId) return ack('Ce n\'est pas ton tour');
 
+            deductElapsed(session, userId);
+
             const question = session.questions[session.currentQuestionIndex];
             const correct = question.answers.some(a => normalize(a.answer) === normalize(answer));
             const correctAnswer = question.answers[0].answer;
 
-            io.to(roomId).emit('game:answer_result', { correct, correctAnswer, answeredBy: userId });
+            io.to(roomId).emit('game:answer_result', {
+                correct,
+                correctAnswer,
+                answeredBy: userId,
+                playerTimes: getPlayerTimes(session),
+            });
             ack();
 
             if (correct) {
@@ -94,16 +119,26 @@ export function registerGameHandlers(io: TypedServer, socket: TypedSocket) {
             }
             session.currentQuestionIndex++;
 
-            const emitNextQuestion = () => {
-                if (session.currentQuestionIndex >= session.questions.length) return;
-                const nextQuestion = session.questions[session.currentQuestionIndex];
-                io.to(roomId).emit('game:question', {
-                    question: { id: nextQuestion.id, label: nextQuestion.label },
-                    currentPlayerId: session.currentPlayerId,
-                });
-            };
+            setTimeout(() => emitQuestion(io, session), correct ? 1500 : 2000);
+        } catch (e) {
+            ack('Erreur serveur');
+        }
+    });
 
-            setTimeout(emitNextQuestion, correct ? 1500 : 2000);
+    socket.on('game:time_up', ({ roomId, userId }, ack) => {
+        try {
+            const session = getSession(roomId);
+            if (!session) return ack('Session introuvable');
+            if (session.currentPlayerId !== userId) return ack();
+
+            deductElapsed(session, userId);
+
+            const players = [...session.players.keys()];
+            session.currentPlayerId = players.find(id => id !== userId) ?? userId;
+            session.currentQuestionIndex++;
+
+            setTimeout(() => emitQuestion(io, session), 1000);
+            ack();
         } catch (e) {
             ack('Erreur serveur');
         }
