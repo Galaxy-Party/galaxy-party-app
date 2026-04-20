@@ -3,8 +3,13 @@ import { getQuestions } from '../../services/game.service.js';
 import { getSession, setSession } from '../../store/game.store.js';
 import { GameSession } from '../../types/game/models.js';
 
+function normalize(str: string): string {
+    return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, '');
+}
+//TODO: Ajouter les paramètres des rooms
 const TIMER_MS = 150_000; // 2:30
 
+//TODO: refactor cette merde
 export function registerGameHandlers(io: TypedServer, socket: TypedSocket) {
 
     socket.on('game:start', async ({ roomId, userId }, ack) => {
@@ -65,6 +70,40 @@ export function registerGameHandlers(io: TypedServer, socket: TypedSocket) {
                     });
                 }
             }, 1000);
+        } catch (e) {
+            ack('Erreur serveur');
+        }
+    });
+
+    socket.on('game:answer', ({ roomId, userId, answer }, ack) => {
+        try {
+            const session = getSession(roomId);
+            if (!session) return ack('Session introuvable');
+            if (session.currentPlayerId !== userId) return ack('Ce n\'est pas ton tour');
+
+            const question = session.questions[session.currentQuestionIndex];
+            const correct = question.answers.some(a => normalize(a.answer) === normalize(answer));
+            const correctAnswer = question.answers[0].answer;
+
+            io.to(roomId).emit('game:answer_result', { correct, correctAnswer, answeredBy: userId });
+            ack();
+
+            if (correct) {
+                const players = [...session.players.keys()];
+                session.currentPlayerId = players.find(id => id !== userId) ?? userId;
+            }
+            session.currentQuestionIndex++;
+
+            const emitNextQuestion = () => {
+                if (session.currentQuestionIndex >= session.questions.length) return;
+                const nextQuestion = session.questions[session.currentQuestionIndex];
+                io.to(roomId).emit('game:question', {
+                    question: { id: nextQuestion.id, label: nextQuestion.label },
+                    currentPlayerId: session.currentPlayerId,
+                });
+            };
+
+            setTimeout(emitNextQuestion, correct ? 1500 : 2000);
         } catch (e) {
             ack('Erreur serveur');
         }

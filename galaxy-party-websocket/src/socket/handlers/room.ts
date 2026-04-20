@@ -2,6 +2,7 @@ import {TypedServer, TypedSocket} from "../../types/types.js";
 import {CreateRoomPayload} from "../../types/room/models.js";
 import {createRoom, deleteRoom, getRoomById, getRooms, joinRoom, leaveRoom} from "../../services/room.service.js";
 import {getUser} from "../../services/user.service.js";
+import {deleteSession} from "../../store/game.store.js";
 
 export function registerRoomHandlers(
     io: TypedServer,
@@ -46,6 +47,7 @@ export function registerRoomHandlers(
     socket.on("room:leave", async ({ roomId, userId }, ack) => {
         try {
             socket.leave(roomId);
+            deleteSession(roomId);
             const updatedRoom = await leaveRoom(roomId, userId);
             if (updatedRoom) {
                 io.to(roomId).emit("room:user_left", userId);
@@ -99,6 +101,7 @@ export function registerRoomHandlers(
         try {
             if (!roomId) return ack("RoomId manquant");
 
+            deleteSession(roomId);
             await deleteRoom(roomId);
 
             io.emit("room:deleted", roomId);

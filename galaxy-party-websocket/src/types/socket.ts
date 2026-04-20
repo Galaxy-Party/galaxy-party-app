@@ -7,6 +7,7 @@ export interface ServerToClientEvents {
     "game:countdown": (count: number) => void;
     "game:started": (data: { currentPlayerId: string }) => void;
     "game:question": (data: { question: { id: string; label: string }; currentPlayerId: string }) => void;
+    "game:answer_result": (data: { correct: boolean; correctAnswer: string; answeredBy: string }) => void;
     "hello:message": (hello: Hello) => void;
     "user:created": (user: User) => void;
     "user:received": (user:User) => void;
@@ -36,6 +37,7 @@ export interface ClientToServerEvents {
     "room:get_all": (ack: (err?: string) => void) => void;
     "game:start": (payload: { roomId: string; userId: string }, ack: (err?: string) => void) => void;
     "game:player_ready": (payload: { roomId: string; userId: string }, ack: (err?: string) => void) => void;
+    "game:answer": (payload: { roomId: string; userId: string; answer: string }, ack: (err?: string) => void) => void;
     "room:delete": (roomId: string, ack: (err?: string) => void) => void;
     "room:get": (roomId: string, ack: (err?: string) => void) => void;
     "room:leave": (payload: { roomId: string; userId: string }, ack: (err?: string) => void) => void;
