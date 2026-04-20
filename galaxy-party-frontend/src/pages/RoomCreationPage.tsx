@@ -8,7 +8,6 @@ import type { Room } from '../types/room/models'
 const INDIGO = '#818cf8'
 const BORDER = 'rgba(129,140,248,0.22)'
 const PANEL = 'rgba(12,8,28,0.82)'
-const TEXT_DIM = 'rgba(241,240,255,0.35)'
 
 export default function RoomCreationPage() {
   const navigate = useNavigate()

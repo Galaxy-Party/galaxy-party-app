@@ -49,7 +49,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             if (err) console.error(err);
             setIsLoading(false);
         })
-    }, []);
+    }, [stored]);
 
 
     return (
