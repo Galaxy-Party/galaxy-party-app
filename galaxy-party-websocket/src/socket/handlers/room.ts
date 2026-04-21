@@ -38,6 +38,8 @@ export function registerRoomHandlers(
             if (!user) return ack("Utilisateur introuvable");
             socket.join(roomId);
             io.to(roomId).emit("room:user_joined", user);
+            const rooms = await getRooms();
+            io.emit("room:list", rooms);
             ack();
         } catch (e) {
             ack("Erreur serveur");
@@ -54,6 +56,8 @@ export function registerRoomHandlers(
                 if (updatedRoom.ownerId !== userId) {
                     io.to(roomId).emit("room:owner_changed", updatedRoom.ownerId);
                 }
+                const rooms = await getRooms();
+                io.emit("room:list", rooms);
             } else {
                 io.emit("room:deleted", roomId);
             }
