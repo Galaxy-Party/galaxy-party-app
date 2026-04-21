@@ -42,7 +42,11 @@ export default function WaitingRoomPage() {
     socket.emit('room:get', id, (err) => { if (err) navigate('/menu') })
   }, [id, navigate])
 
-  const handleRoomDetails = useCallback((r: Room) => { setRoom(r); setIsPrivate(r.hasPassword) }, [])
+  const handleRoomDetails = useCallback((r: Room) => {
+    if (user && !r.users.some(u => u.id === user.id)) { navigate('/menu'); return }
+    setRoom(r)
+    setIsPrivate(r.hasPassword)
+  }, [user, navigate])
   const handleUserJoined = useCallback((newUser: User) => {
     setRoom(prev => {
       if (!prev || prev.users.some(u => u.id === newUser.id)) return prev
