@@ -68,7 +68,8 @@ export default function WaitingRoomPage() {
   if (!room) return null
 
   const isOwner = user?.id === room.ownerId
-  const opponent = room.users.find(u => u.id !== user?.id) ?? null
+  const owner = room.users.find(u => u.id === room.ownerId) ?? null
+  const opponent = room.users.find(u => u.id !== room.ownerId) ?? null
 
   const handleLeave = () => {
     if (!id || !user) return
@@ -120,13 +121,13 @@ export default function WaitingRoomPage() {
               <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: INDIGO, marginBottom: 4 }}>
                 Joueurs
               </div>
-              {/* Current user row */}
+              {/* Owner row */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '16px 20px', borderRadius: 16, border: `1px solid ${BORDER}`, background: 'rgba(12,8,28,0.4)' }}>
                 <div style={{ width: 52, height: 52, borderRadius: '50%', background: NAVY, border: `2px solid ${INDIGO}`, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <img src={user?.imageName ?? undefined} alt="avatar" style={{ width: '72%', height: '72%', objectFit: 'contain' }} />
+                  {owner && <img src={owner.imageName ?? undefined} alt="avatar" style={{ width: '72%', height: '72%', objectFit: 'contain' }} />}
                 </div>
                 <div>
-                  <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 16, fontWeight: 600, color: '#f1f0ff' }}>{user?.username}</div>
+                  <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 16, fontWeight: 600, color: '#f1f0ff' }}>{owner?.username}</div>
                   <div style={{ fontSize: 10, color: INDIGO, letterSpacing: '0.12em', textTransform: 'uppercase' }}>Hôte</div>
                 </div>
               </div>
