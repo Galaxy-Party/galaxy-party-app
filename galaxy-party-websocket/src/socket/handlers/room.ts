@@ -36,6 +36,8 @@ export function registerRoomHandlers(
             if (!success) return ack("Mot de passe incorrect");
             const user = await getUser(userId);
             if (!user) return ack("Utilisateur introuvable");
+            socket.data.userId = userId;
+            socket.data.roomId = roomId;
             socket.join(roomId);
             io.to(roomId).emit("room:user_joined", user);
             const rooms = await getRooms();
@@ -48,6 +50,7 @@ export function registerRoomHandlers(
 
     socket.on("room:leave", async ({ roomId, userId }, ack) => {
         try {
+            socket.data.roomId = undefined;
             socket.leave(roomId);
             deleteSession(roomId);
             const updatedRoom = await leaveRoom(roomId, userId);
@@ -93,6 +96,8 @@ export function registerRoomHandlers(
 
             await joinRoom(room.id, ownerId, password);
 
+            socket.data.userId = ownerId;
+            socket.data.roomId = room.id;
             socket.join(room.id);
             io.emit("room:created", room);
             ack();

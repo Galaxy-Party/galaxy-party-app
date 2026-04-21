@@ -7,6 +7,10 @@ export function registerUserHandlers(
     io: TypedServer,
     socket: TypedSocket
 ) {
+    socket.on("user:register", (userId) => {
+        socket.data.userId = userId;
+    });
+
     socket.on("user:create", async (payload, ack) => {
         try {
             const { username, imageName = null } = payload;
