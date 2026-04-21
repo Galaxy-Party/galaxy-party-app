@@ -1,4 +1,4 @@
-﻿package com.galaxy_party.backend.dto.room.input;
+package com.galaxy_party.backend.dto.room.input;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
