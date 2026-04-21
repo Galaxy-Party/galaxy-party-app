@@ -4,6 +4,7 @@ import 'dotenv/config'
 import {ClientToServerEvents, ServerToClientEvents} from "./types/socket.js";
 import app from "./app.js";
 import {initSocket} from "./socket/index.js";
+import {apiClient} from "./lib/axios.js";
 
 
 
@@ -24,6 +25,12 @@ initSocket(io);
 
 const PORT: number = Number(process.env.PORT) || 4000;
 
-httpserver.listen(PORT, () => {
+httpserver.listen(PORT, async () => {
     console.log(`WebSocket server running on port ${PORT}`);
+    try {
+        await apiClient.delete("/api/rooms");
+        console.log("Rooms cleared on startup");
+    } catch (e) {
+        console.error("Failed to clear rooms on startup:", e);
+    }
 });
