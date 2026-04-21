@@ -30,12 +30,20 @@ export default function WaitingRoomPage() {
   const { id } = useParams<{ id: string }>()
   const { user } = useUserContext()
   const [showReturnModal, setShowReturnModal] = useState(false)
-  const [timer, setTimer] = useState(150)
+  const [timer, setTimer] = useState(150000)
   const [isPrivate, setIsPrivate] = useState(false)
   const [password, setPassword] = useState('')
   const [room, setRoom] = useState<Room | null>(null)
 
-  const fmt = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`
+  const fmt = (ms: number) => {
+    const s = Math.floor(ms / 1000)
+    return `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`
+  }
+
+  const emitUpdate = (patch: { timer?: number; password?: string }) => {
+    if (!id) return
+    socket.emit('room:update', { roomId: id, ...patch }, (err) => { if (err) console.error(err) })
+  }
 
   useEffect(() => {
     if (!id) { navigate('/menu'); return }
@@ -46,6 +54,7 @@ export default function WaitingRoomPage() {
     if (user && !r.users.some(u => u.id === user.id)) { navigate('/menu'); return }
     setRoom(r)
     setIsPrivate(r.hasPassword)
+    if (r.timer != null) setTimer(r.timer)
   }, [user, navigate])
   const handleUserJoined = useCallback((newUser: User) => {
     setRoom(prev => {
@@ -171,9 +180,11 @@ export default function WaitingRoomPage() {
                 </div>
                 <input
                   type="range"
-                  min={60} max={300} step={15}
+                  min={60000} max={300000} step={15000}
                   value={timer}
                   onChange={e => setTimer(Number(e.target.value))}
+                  onMouseUp={e => emitUpdate({ timer: Number((e.target as HTMLInputElement).value) })}
+                  onTouchEnd={e => emitUpdate({ timer: Number((e.target as HTMLInputElement).value) })}
                   style={{ width: '100%', accentColor: INDIGO, cursor: 'pointer' }}
                 />
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
@@ -188,7 +199,7 @@ export default function WaitingRoomPage() {
                 <div style={{ display: 'flex', background: 'rgba(12,8,28,0.6)', borderRadius: 10, padding: 3, border: `1px solid ${BORDER}` }}>
                   <button
                     disabled={!isOwner}
-                    onClick={() => { setIsPrivate(false); setPassword('') }}
+                    onClick={() => { setIsPrivate(false); setPassword(''); emitUpdate({ password: '' }) }}
                     style={{ flex: 1, padding: '6px 12px', borderRadius: 8, border: 'none', background: !isPrivate ? 'rgba(129,140,248,0.2)' : 'transparent', cursor: isOwner ? 'pointer' : 'not-allowed', fontFamily: "'DM Sans', sans-serif", fontSize: 13, fontWeight: 500, color: !isPrivate ? INDIGO : TEXT_DIM, transition: 'all 0.2s' }}
                   >
                     Public
@@ -213,6 +224,7 @@ export default function WaitingRoomPage() {
                     />
                     {isOwner && (
                       <button
+                        onClick={() => emitUpdate({ password })}
                         style={{ padding: '8px 12px', borderRadius: 8, border: `1px solid ${INDIGO}`, background: 'rgba(129,140,248,0.15)', color: INDIGO, cursor: 'pointer', transition: 'all 0.2s', flexShrink: 0 }}
                       >
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: 16, height: 16 }}>

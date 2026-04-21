@@ -1,6 +1,7 @@
 package com.galaxy_party.backend.services;
 
 import com.galaxy_party.backend.dto.room.input.CreateRoomDto;
+import com.galaxy_party.backend.dto.room.input.UpdateRoomDto;
 import com.galaxy_party.backend.dto.room.output.RoomDto;
 import com.galaxy_party.backend.entity.RoomEntity;
 import com.galaxy_party.backend.entity.UserEntity;
@@ -80,6 +81,18 @@ public class RoomService {
             room.setOwnerId(room.getUsers().get(0).getId());
         }
 
+        roomRepository.save(room);
+        return RoomEntity.toRoomDto(room);
+    }
+
+    public RoomDto updateRoom(UUID roomId, UpdateRoomDto dto) {
+        RoomEntity room = findById(roomId);
+        if (dto.getTimer() != null) {
+            room.setTimer(dto.getTimer());
+        }
+        if (dto.getPassword() != null) {
+            room.setPassword(dto.getPassword().isEmpty() ? null : passwordEncoder.encode(dto.getPassword()));
+        }
         roomRepository.save(room);
         return RoomEntity.toRoomDto(room);
     }

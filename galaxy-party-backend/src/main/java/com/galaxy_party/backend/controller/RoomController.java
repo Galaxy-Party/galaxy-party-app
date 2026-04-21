@@ -3,6 +3,7 @@ package com.galaxy_party.backend.controller;
 import com.galaxy_party.backend.dto.room.input.CreateRoomDto;
 import com.galaxy_party.backend.dto.room.input.JoinRoomDto;
 import com.galaxy_party.backend.dto.room.input.LeaveRoomDto;
+import com.galaxy_party.backend.dto.room.input.UpdateRoomDto;
 import com.galaxy_party.backend.dto.room.output.RoomDto;
 import com.galaxy_party.backend.entity.RoomEntity;
 import com.galaxy_party.backend.services.RoomService;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -51,6 +53,11 @@ public class RoomController {
     public ResponseEntity<?> deleteAllRooms() {
         roomService.deleteAllRooms();
         return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<RoomDto> updateRoom(@PathVariable UUID id, @RequestBody UpdateRoomDto updateRoomDto) {
+        return ResponseEntity.ok(roomService.updateRoom(id, updateRoomDto));
     }
 
     @PostMapping("/join/{id}")

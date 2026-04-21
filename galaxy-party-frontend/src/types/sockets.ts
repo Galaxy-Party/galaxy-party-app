@@ -50,4 +50,8 @@ export interface ClientToServerEvents {
         payload: { roomId: string; userId: string; password?: string },
         ack: (err?: string) => void
     ) => void;
+    "room:update": (
+        payload: { roomId: string; timer?: number; password?: string },
+        ack: (err?: string) => void
+    ) => void;
 }

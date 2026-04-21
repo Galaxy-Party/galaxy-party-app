@@ -17,6 +17,7 @@ public class CreateRoomDto {
     private String name;
     private String password;
     private UUID ownerId;
+    private Long timer;
 
     public static RoomEntity toRoomEntity(CreateRoomDto createRoomDto) {
         return RoomEntity.builder()
@@ -24,6 +25,7 @@ public class CreateRoomDto {
                 .name(createRoomDto.getName())
                 .password(createRoomDto.getPassword())
                 .ownerId(createRoomDto.getOwnerId())
+                .timer(createRoomDto.getTimer())
                 .build();
     }
 }

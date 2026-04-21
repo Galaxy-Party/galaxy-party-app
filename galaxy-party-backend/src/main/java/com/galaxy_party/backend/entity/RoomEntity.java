@@ -38,6 +38,9 @@ public class RoomEntity {
     @Column(name = "owner_id")
     private UUID ownerId;
 
+    @Column
+    private Long timer;
+
     @OneToMany(mappedBy = "room")
     private List<UserEntity> users = new ArrayList<>();
 
@@ -47,6 +50,7 @@ public class RoomEntity {
                 .name(roomEntity.getName())
                 .hasPassword(roomEntity.getPassword() != null && !roomEntity.getPassword().isEmpty())
                 .ownerId(roomEntity.getOwnerId())
+                .timer(roomEntity.getTimer())
                 .users(roomEntity.getUsers().stream().map(UserEntity::toUserDto).toList())
                 .build();
     }

@@ -5,6 +5,7 @@ export interface Room {
     name: string;
     hasPassword: boolean;
     ownerId: string;
+    timer: number | null;
     users: User[];
 }
 

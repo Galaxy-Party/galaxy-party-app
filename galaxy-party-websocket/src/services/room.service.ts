@@ -40,6 +40,15 @@ export async function deleteRoom(roomId: string): Promise<void> {
     await apiClient.delete(`/api/rooms/${roomId}`);
 }
 
+export async function updateRoom(roomId: string, payload: { timer?: number; password?: string }): Promise<Room | undefined> {
+    try {
+        const { data } = await apiClient.put<Room>(`/api/rooms/${roomId}`, payload);
+        return data;
+    } catch (error) {
+        console.error(error);
+    }
+}
+
 export async function joinRoom(roomId: string, userId: string, password?: string | null): Promise<boolean | undefined> {
     try {
         const { data } = await apiClient.post<boolean>(`/api/rooms/join/${roomId}`, {
