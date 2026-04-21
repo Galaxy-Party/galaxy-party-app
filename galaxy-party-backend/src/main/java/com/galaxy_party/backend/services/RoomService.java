@@ -48,8 +48,17 @@ public class RoomService {
             user.setRoom(null);
         }
 
-
         roomRepository.deleteById(id);
+    }
+
+    public void deleteAllRooms() {
+        List<RoomEntity> rooms = roomRepository.findAll();
+        for (RoomEntity room : rooms) {
+            for (UserEntity user : room.getUsers()) {
+                user.setRoom(null);
+            }
+        }
+        roomRepository.deleteAll();
     }
 
 

@@ -47,6 +47,12 @@ public class RoomController {
         return ResponseEntity.noContent().build();
     }
 
+    @DeleteMapping
+    public ResponseEntity<?> deleteAllRooms() {
+        roomService.deleteAllRooms();
+        return ResponseEntity.noContent().build();
+    }
+
     @PostMapping("/join/{id}")
     public ResponseEntity<Boolean> joinRoom(@PathVariable UUID id, @RequestBody JoinRoomDto joinRoomDto) {
         return new ResponseEntity<>(roomService.joinRoom(id, joinRoomDto.getUserId(), joinRoomDto.getPassword()), HttpStatus.OK);
