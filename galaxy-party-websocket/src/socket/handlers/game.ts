@@ -12,7 +12,14 @@ function getPlayerTimes(session: GameSession): Record<string, number> {
 }
 
 function emitQuestion(io: TypedServer, session: GameSession): void {
-    if (session.currentQuestionIndex >= session.questions.length) return;
+    if (session.currentQuestionIndex >= session.questions.length) {
+        const winnerId = [...session.players.entries()].reduce((a, b) =>
+            a[1].timeRemaining >= b[1].timeRemaining ? a : b
+        )[0];
+        deleteSession(session.roomId);
+        io.to(session.roomId).emit('game:over', { winnerId });
+        return;
+    }
     const question = session.questions[session.currentQuestionIndex];
     session.turnStartedAt = Date.now();
     io.to(session.roomId).emit('game:question', {
