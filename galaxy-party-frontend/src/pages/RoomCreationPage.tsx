@@ -18,7 +18,9 @@ export default function RoomCreationPage() {
   const [hasPassword, setHasPassword] = useState(false)
 
   useSocket('room:created', (room: Room) => {
-    navigate(`/rooms/${room.id}`, { state: { room } })
+    if (room.ownerId === user?.id) {
+      navigate(`/rooms/${room.id}`, { state: { room } })
+    }
   })
 
   const handleCreate = () => {
