@@ -14,6 +14,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     const setUser = (user: User) => {
         setUserState(user);
         localStorage.setItem("galaxy-party-user-id", user.id);
+        socket.emit("user:register", user.id);
         setIsLoading(false);
     };
     const logout = () => {
@@ -50,6 +51,14 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             setIsLoading(false);
         })
     }, [stored]);
+
+    useEffect(() => {
+        const handleReconnect = () => {
+            if (user) socket.emit("user:register", user.id);
+        };
+        socket.on("connect", handleReconnect);
+        return () => { socket.off("connect", handleReconnect); };
+    }, [user]);
 
 
     return (

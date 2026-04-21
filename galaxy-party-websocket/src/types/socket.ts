@@ -24,6 +24,7 @@ export interface ServerToClientEvents {
 
 export interface ClientToServerEvents {
     "hello:send": (hello: Hello) => void;
+    "user:register": (userId: string) => void;
     "user:create": (
         payload: CreateUserPayload,
         ack: (err?: string) => void

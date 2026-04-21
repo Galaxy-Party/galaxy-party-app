@@ -5,6 +5,11 @@ import type {
     ServerToClientEvents
 } from "./socket.js"
 
+interface SocketData {
+    userId?: string;
+    roomId?: string;
+}
+
 export type TypedServer = Server<
     ClientToServerEvents,
     ServerToClientEvents
@@ -12,5 +17,7 @@ export type TypedServer = Server<
 
 export type TypedSocket = Socket<
     ClientToServerEvents,
-    ServerToClientEvents
+    ServerToClientEvents,
+    never,
+    SocketData
 >;
