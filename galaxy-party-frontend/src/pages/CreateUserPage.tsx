@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import avatars from '../assets/avatars'
 import { useUserContext } from '../hooks/useUserContext'
 import Starfield from '../components/Starfield'
@@ -21,10 +22,15 @@ function Nebulae() {
 }
 
 export default function CreateUserPage() {
-  const { createUser } = useUserContext()
+  const { user, isLoading, createUser } = useUserContext()
+  const navigate = useNavigate()
   const [avatarIndex, setAvatarIndex] = useState(0)
   const [username, setUsername] = useState('')
   const [imageName, setImageName] = useState<string>(avatars[0])
+
+  useEffect(() => {
+    if (!isLoading && user) navigate('/menu', { replace: true })
+  }, [user, isLoading, navigate])
 
   useEffect(() => { setImageName(avatars[avatarIndex]) }, [avatarIndex])
 
