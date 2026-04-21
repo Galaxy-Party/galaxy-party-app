@@ -1,6 +1,7 @@
 ﻿import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useUserContext } from '../hooks/useUserContext'
 import Starfield from '../components/Starfield'
+import logo from '../assets/logo.png'
 
 const INDIGO = '#818cf8'
 const ROSE = '#f472b6'
@@ -71,9 +72,7 @@ export default function AppLayout() {
             onClick={() => navigate('/menu')}
             style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
           >
-            <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 17, letterSpacing: '0.08em', textTransform: 'uppercase', background: 'linear-gradient(90deg,#818cf8,#f472b6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-              Galaxy Party
-            </span>
+            <img src={logo} alt="Galaxy Party" style={{ height: 120, objectFit: 'contain' }} />
           </button>
           {user && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 9, background: 'rgba(12,8,28,0.6)', backdropFilter: 'blur(14px)', border: `1px solid ${BORDER}`, borderRadius: 30, padding: '7px 16px 7px 10px' }}>

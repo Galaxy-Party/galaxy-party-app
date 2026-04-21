@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import avatars from '../assets/avatars'
 import { useUserContext } from '../hooks/useUserContext'
 import Starfield from '../components/Starfield'
+import logo from '../assets/logo.png'
 
 const INDIGO = '#818cf8'
 const INDIGO_D = '#4f46e5'
@@ -36,6 +37,10 @@ export default function CreateUserPage() {
     <div style={{ position: 'relative', width: '100vw', height: '100vh', overflow: 'hidden', background: '#07050f', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'DM Sans', sans-serif" }}>
       <Starfield />
       <Nebulae />
+
+      <div style={{ position: 'fixed', top: 20, left: 32, zIndex: 10 }}>
+        <img src={logo} alt="Galaxy Party" style={{ height: 120, objectFit: 'contain' }} />
+      </div>
 
       <div className="card-in" style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: 580, background: PANEL, backdropFilter: 'blur(28px)', border: `1px solid ${BORDER}`, borderRadius: 28, overflow: 'hidden', boxShadow: '0 32px 80px rgba(0,0,0,0.7)', margin: '0 24px' }}>
         <div style={{ padding: '36px 40px 40px' }}>
