@@ -43,6 +43,7 @@ export default function GamePage() {
   const [winnerId, setWinnerId] = useState<string | null>(null)
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
 
   const opponent = room?.users.find(u => u.id !== user?.id) ?? null
   const isMyTurn = currentPlayerId === user?.id
@@ -85,6 +86,7 @@ export default function GamePage() {
     setPlayerTimes(playerTimes)
     setAnswer('')
     setAnswerResult(null)
+    setTimeout(() => inputRef.current?.focus(), 50)
   }, [])
   const handleAnswerResult = useCallback(({ correct, correctAnswer, playerTimes }: { correct: boolean; correctAnswer: string; answeredBy: string; playerTimes: Record<string, number> }) => {
     setAnswerResult({ correct, correctAnswer })
@@ -260,6 +262,7 @@ export default function GamePage() {
           onChange={e => setAnswer(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && submitAnswer()}
           placeholder="Votre réponse…"
+          ref={inputRef}
           disabled={!isMyTurn || answerResult !== null}
           style={{ width: '100%', background: 'transparent', border: 'none', borderBottom: `2px solid ${INDIGO}`, color: '#f1f0ff', fontFamily: "'DM Sans', sans-serif", fontSize: 20, fontWeight: 500, textAlign: 'center', outline: 'none', paddingBottom: 10, opacity: (!isMyTurn || answerResult !== null) ? 0.3 : 1 }}
         />
