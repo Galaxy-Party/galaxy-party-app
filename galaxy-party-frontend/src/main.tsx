@@ -9,6 +9,7 @@ import RoomCreationPage from './pages/RoomCreationPage.tsx'
 import RoomListPage from './pages/RoomListPage.tsx'
 import { UserProvider } from './context/UserContext.tsx'
 import ProtectedRoute from './components/ProtectedRoute.tsx'
+import CatchAllRedirect from './components/CatchAllRedirect.tsx'
 import WaitingRoomPage from './pages/rooms/WaitingRoomPage.tsx'
 import GamePage from './pages/rooms/GamePage.tsx'
 import AppLayout from './layouts/AppLayout.tsx'
@@ -29,6 +30,7 @@ createRoot(document.getElementById('root')!).render(
             <Route path="/rooms/:id" element={<WaitingRoomPage />} />
             <Route path="/rooms/:id/game" element={<GamePage />} />
           </Route>
+          <Route path="*" element={<CatchAllRedirect />} />
         </Routes>
       </UserProvider>
     </BrowserRouter>
