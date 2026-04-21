@@ -4,7 +4,7 @@ import JoinRoomModal from '../components/JoinRoomModal'
 import { useUserContext } from '../hooks/useUserContext'
 import { useSocket } from '../hooks/useSocket'
 import socket from '../socket/client'
-import type { Room } from '../types/models'
+import type { Room } from '../types/room/models'
 
 const INDIGO = '#818cf8'
 const EMERALD = '#34d399'
@@ -19,7 +19,10 @@ export default function RoomListPage() {
   const [search, setSearch] = useState('')
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null)
 
-  const filtered = rooms.filter(r => r.name.toLowerCase().includes(search.toLowerCase()))
+  const filtered = rooms.filter(r =>
+    r.name.toLowerCase().includes(search.toLowerCase()) &&
+    (r.users?.length ?? 0) < 2
+  )
 
   useEffect(() => {
     socket.emit('room:get_all', (err) => { if (err) console.error(err) })
@@ -90,6 +93,9 @@ export default function RoomListPage() {
               <div style={{ width: 8, height: 8, borderRadius: '50%', background: EMERALD, boxShadow: `0 0 6px ${EMERALD}`, flexShrink: 0 }} />
               <span style={{ flex: 1, fontFamily: "'DM Sans', sans-serif", fontSize: 15, fontWeight: 600, color: '#f1f0ff' }}>
                 {room.name}
+              </span>
+              <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 12, fontWeight: 700, color: (room.users?.length ?? 0) >= 1 ? 'rgba(244,114,182,0.8)' : TEXT_DIM, minWidth: 32, textAlign: 'center' }}>
+                {room.users?.length ?? 0}/2
               </span>
               {room.hasPassword && (
                 <svg viewBox="0 0 24 24" fill="none" stroke={TEXT_DIM} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ width: 13, height: 13 }}>
