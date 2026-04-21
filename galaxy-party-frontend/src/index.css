@@ -60,4 +60,13 @@ html, body {
   button:focus, button:focus-visible {
     outline: none;
   }
+
+  button:not(:disabled) {
+    transition: opacity 0.15s, transform 0.1s, background 0.15s, border-color 0.15s;
+  }
+
+  button:not(:disabled):active {
+    transform: scale(0.96);
+    opacity: 0.85;
+  }
 }

@@ -46,6 +46,7 @@ export interface ClientToServerEvents {
     "room:delete": (roomId: string, ack: (err?: string) => void) => void;
     "room:get": (roomId: string, ack: (err?: string) => void) => void;
     "room:leave": (payload: { roomId: string; userId: string }, ack: (err?: string) => void) => void;
+    "room:update": (payload: { roomId: string; timer?: number; password?: string }, ack: (err?: string) => void) => void;
     "room:join": (
         payload: { roomId: string; userId: string; password?: string },
         ack: (err?: string) => void

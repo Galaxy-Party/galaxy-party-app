@@ -1,6 +1,6 @@
 import {TypedServer, TypedSocket} from "../../types/types.js";
 import {CreateRoomPayload} from "../../types/room/models.js";
-import {createRoom, deleteRoom, getRoomById, getRooms, joinRoom, leaveRoom} from "../../services/room.service.js";
+import {createRoom, deleteRoom, getRoomById, getRooms, joinRoom, leaveRoom, updateRoom} from "../../services/room.service.js";
 import {getUser} from "../../services/user.service.js";
 import {deleteSession} from "../../store/game.store.js";
 
@@ -100,6 +100,19 @@ export function registerRoomHandlers(
             socket.data.roomId = room.id;
             socket.join(room.id);
             io.emit("room:created", room);
+            ack();
+        } catch (e) {
+            ack("Erreur serveur");
+        }
+    });
+
+    socket.on("room:update", async ({ roomId, timer, password }, ack) => {
+        try {
+            const updated = await updateRoom(roomId, { timer, password });
+            if (!updated) return ack("Erreur serveur");
+            io.to(roomId).emit("room:details", updated);
+            const rooms = await getRooms();
+            io.emit("room:list", rooms);
             ack();
         } catch (e) {
             ack("Erreur serveur");
