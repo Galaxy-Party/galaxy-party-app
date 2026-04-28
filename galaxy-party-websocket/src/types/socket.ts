@@ -1,6 +1,8 @@
 import {Hello} from "./models.js";
 import {User} from "./user/models.js";
 import {CreateRoomPayload, Room} from "./room/models.js";
+import {FriendItem, FriendRequest, FriendStatus} from "./friendship/models.js";
+import {Message} from "./message/models.js";
 
 export interface ServerToClientEvents {
     "game:loading": () => void;
@@ -18,6 +20,10 @@ export interface ServerToClientEvents {
     "room:user_joined": (user: User) => void;
     "room:user_left": (userId: string) => void;
     "room:owner_changed": (newOwnerId: string) => void;
+    "friend:list": (data: { friends: FriendItem[]; requests: FriendRequest[] }) => void;
+    "friend:status": (userId: string, status: FriendStatus) => void;
+    "friend:requested": (request: FriendRequest) => void;
+    "message:received": (message: Message) => void;
 }
 
 export interface ClientToServerEvents {
@@ -40,4 +46,9 @@ export interface ClientToServerEvents {
         payload: { roomId: string; password?: string },
         ack: (err?: string) => void
     ) => void;
+    "friend:request": (toUsername: string, ack: (err?: string) => void) => void;
+    "friend:accept": (friendshipId: string, ack: (err?: string) => void) => void;
+    "friend:decline": (friendshipId: string, ack: (err?: string) => void) => void;
+    "message:send": (payload: { toUserId: string; content: string }, ack: (err?: string, message?: Message) => void) => void;
+    "message:get_history": (payload: { withUserId: string }, ack: (err?: string, messages?: Message[]) => void) => void;
 }
