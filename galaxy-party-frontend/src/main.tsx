@@ -13,6 +13,7 @@ import ProtectedRoute from './components/ProtectedRoute.tsx'
 import CatchAllRedirect from './components/CatchAllRedirect.tsx'
 import WaitingRoomPage from './pages/rooms/WaitingRoomPage.tsx'
 import GamePage from './pages/rooms/GamePage.tsx'
+import SpectatorPage from './pages/rooms/SpectatorPage.tsx'
 import AppLayout from './layouts/AppLayout.tsx'
 
 createRoot(document.getElementById('root')!).render(
@@ -31,6 +32,7 @@ createRoot(document.getElementById('root')!).render(
             </Route>
             <Route path="/rooms/:id" element={<WaitingRoomPage />} />
             <Route path="/rooms/:id/game" element={<GamePage />} />
+            <Route path="/rooms/:id/spectate" element={<SpectatorPage />} />
           </Route>
           <Route path="*" element={<CatchAllRedirect />} />
         </Routes>

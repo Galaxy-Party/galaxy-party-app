@@ -20,6 +20,7 @@ export interface ServerToClientEvents {
     "room:user_joined": (user: User) => void;
     "room:user_left": (userId: string) => void;
     "room:owner_changed": (newOwnerId: string) => void;
+    "game:spectator_state": (data: { question: { id: string; label: string } | null; currentPlayerId: string; playerTimes: Record<string, number> }) => void;
     "friend:list": (data: { friends: FriendItem[]; requests: FriendRequest[] }) => void;
     "friend:status": (userId: string, status: FriendStatus) => void;
     "friend:requested": (request: FriendRequest) => void;
@@ -48,6 +49,8 @@ export interface ClientToServerEvents {
         payload: { roomId: string; password?: string },
         ack: (err?: string) => void
     ) => void;
+    "room:spectate": (payload: { roomId: string }, ack: (err?: string) => void) => void;
+    "room:spectate_leave": (payload: { roomId: string }, ack: (err?: string) => void) => void;
     "friend:get_list": (ack: (err?: string) => void) => void;
     "friend:request": (toUsername: string, ack: (err?: string) => void) => void;
     "friend:accept": (friendshipId: string, ack: (err?: string) => void) => void;

@@ -7,6 +7,7 @@ export interface Room {
     ownerId: string;
     timer: number | null;
     users: User[];
+    isInProgress?: boolean;
 }
 
 export interface CreateRoomPayload {
