@@ -13,5 +13,6 @@ public class QuestionDto {
 
     private UUID id;
     private String label;
+    private String displayAnswer;
     private List<AnswerDto> answers;
 }
