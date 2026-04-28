@@ -3,6 +3,7 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useUserContext } from '../hooks/useUserContext'
 import Starfield from '../components/Starfield'
 import FriendsPanel from '../components/FriendsPanel'
+import GameInviteNotif from '../components/GameInviteNotif'
 import logo from '../assets/logo.png'
 import socket from '../socket/client'
 
@@ -43,6 +44,7 @@ export default function AppLayout() {
   const { pathname } = useLocation()
   const [friendsOpen, setFriendsOpen] = useState(false)
   const [hasNotif, setHasNotif] = useState(false)
+  const [gameInvite, setGameInvite] = useState<{ inviteId: string; fromUserId: string; fromUsername: string; fromImageName: string | null } | null>(null)
 
   useEffect(() => {
     const onList = ({ requests }: { requests: unknown[] }) => {
@@ -51,19 +53,38 @@ export default function AppLayout() {
     const onRequested = () => { if (!friendsOpen) setHasNotif(true) }
     const onMessage  = () => { if (!friendsOpen) setHasNotif(true) }
 
+    const onInvite = (invite: { inviteId: string; fromUserId: string; fromUsername: string; fromImageName: string | null }) => {
+      setGameInvite(invite)
+    }
+    const onInviteAccepted = (roomId: string) => {
+      setGameInvite(null)
+      navigate(`/rooms/${roomId}`)
+    }
+
     socket.on('friend:list', onList)
     socket.on('friend:requested', onRequested)
     socket.on('message:received', onMessage)
+    socket.on('friend:game_invite', onInvite)
+    socket.on('friend:invite_accepted', onInviteAccepted)
     return () => {
       socket.off('friend:list', onList)
       socket.off('friend:requested', onRequested)
       socket.off('message:received', onMessage)
+      socket.off('friend:game_invite', onInvite)
+      socket.off('friend:invite_accepted', onInviteAccepted)
     }
-  }, [friendsOpen])
+  }, [friendsOpen, navigate])
 
   return (
     <div className="relative w-screen h-screen overflow-hidden bg-[#07050f]">
       <FriendsPanel open={friendsOpen} onClose={() => setFriendsOpen(false)} />
+      {gameInvite && (
+        <GameInviteNotif
+          invite={gameInvite}
+          onAccept={(roomId) => { setGameInvite(null); navigate(`/rooms/${roomId}`) }}
+          onDecline={() => setGameInvite(null)}
+        />
+      )}
       <Starfield />
       <Nebulae />
 

@@ -23,6 +23,8 @@ export interface ServerToClientEvents {
     "friend:list": (data: { friends: FriendItem[]; requests: FriendRequest[] }) => void;
     "friend:status": (userId: string, status: FriendStatus) => void;
     "friend:requested": (request: FriendRequest) => void;
+    "friend:game_invite": (invite: { inviteId: string; fromUserId: string; fromUsername: string; fromImageName: string | null }) => void;
+    "friend:invite_accepted": (roomId: string) => void;
     "message:received": (message: Message) => void;
 }
 
@@ -46,9 +48,13 @@ export interface ClientToServerEvents {
         payload: { roomId: string; password?: string },
         ack: (err?: string) => void
     ) => void;
+    "friend:get_list": (ack: (err?: string) => void) => void;
     "friend:request": (toUsername: string, ack: (err?: string) => void) => void;
     "friend:accept": (friendshipId: string, ack: (err?: string) => void) => void;
     "friend:decline": (friendshipId: string, ack: (err?: string) => void) => void;
+    "friend:invite": (toUserId: string, ack: (err?: string) => void) => void;
+    "friend:invite_accept": (inviteId: string, ack: (err?: string, roomId?: string) => void) => void;
+    "friend:invite_decline": (inviteId: string, ack: (err?: string) => void) => void;
     "message:send": (payload: { toUserId: string; content: string }, ack: (err?: string, message?: Message) => void) => void;
     "message:get_history": (payload: { withUserId: string }, ack: (err?: string, messages?: Message[]) => void) => void;
 }

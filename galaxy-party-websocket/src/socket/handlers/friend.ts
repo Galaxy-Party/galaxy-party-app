@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto';
 import { TypedServer, TypedSocket } from '../../types/types.js';
 import { Friendship, FriendItem, FriendRequest, FriendStatus } from '../../types/friendship/models.js';
 import {
@@ -7,6 +8,10 @@ import {
     deleteFriendship,
 } from '../../services/friendship.service.js';
 import { saveMessage, getConversation } from '../../services/message.service.js';
+import { createRoom, joinRoom } from '../../services/room.service.js';
+import { getUser } from '../../services/user.service.js';
+
+const pendingInvites = new Map<string, { fromUserId: string; toUserId: string }>();
 
 function getFriendStatus(io: TypedServer, userId: string): FriendStatus {
     const s = [...io.sockets.sockets.values()].find(s => s.data.userId === userId);
@@ -77,6 +82,11 @@ export async function sendFriendList(io: TypedServer, socket: TypedSocket) {
 
 export function registerFriendHandlers(io: TypedServer, socket: TypedSocket) {
 
+    socket.on('friend:get_list', async (ack) => {
+        await sendFriendList(io, socket);
+        ack();
+    });
+
     socket.on('friend:request', async (toUsername, ack) => {
         try {
             const userId = socket.data.userId;
@@ -139,6 +149,74 @@ export function registerFriendHandlers(io: TypedServer, socket: TypedSocket) {
         } catch (e) {
             ack('Erreur serveur');
         }
+    });
+
+    socket.on('friend:invite', async (toUserId, ack) => {
+        try {
+            const fromUserId = socket.data.userId;
+            if (!fromUserId) return ack('Non authentifié');
+
+            const targetSocket = [...io.sockets.sockets.values()].find(s => s.data.userId === toUserId);
+            if (!targetSocket) return ack('Ami non connecté');
+
+            const fromUser = await getUser(fromUserId);
+            if (!fromUser) return ack('Erreur serveur');
+
+            const inviteId = randomUUID();
+            pendingInvites.set(inviteId, { fromUserId, toUserId });
+
+            targetSocket.emit('friend:game_invite', {
+                inviteId,
+                fromUserId,
+                fromUsername: fromUser.username,
+                fromImageName: fromUser.imageName ?? null,
+            });
+
+            ack();
+        } catch (e) {
+            ack('Erreur serveur');
+        }
+    });
+
+    socket.on('friend:invite_accept', async (inviteId, ack) => {
+        try {
+            const invite = pendingInvites.get(inviteId);
+            if (!invite) return ack('Invitation expirée');
+            pendingInvites.delete(inviteId);
+
+            const { fromUserId, toUserId } = invite;
+
+            const [userA, userB] = await Promise.all([getUser(fromUserId), getUser(toUserId)]);
+            if (!userA || !userB) return ack('Erreur serveur');
+
+            const room = await createRoom({
+                name: `${userA.username}-${userB.username}`,
+                ownerId: fromUserId,
+                password: null,
+            });
+            if (!room) return ack('Erreur lors de la création du salon');
+
+            await Promise.all([
+                joinRoom(room.id, fromUserId, null),
+                joinRoom(room.id, toUserId, null),
+            ]);
+
+            const sockets = [...io.sockets.sockets.values()].filter(
+                s => s.data.userId === fromUserId || s.data.userId === toUserId
+            );
+            for (const s of sockets) {
+                s.emit('friend:invite_accepted', room.id);
+            }
+
+            ack(undefined, room.id);
+        } catch (e) {
+            ack('Erreur serveur');
+        }
+    });
+
+    socket.on('friend:invite_decline', async (inviteId, ack) => {
+        pendingInvites.delete(inviteId);
+        ack();
     });
 
     socket.on('message:get_history', async ({ withUserId }, ack) => {
