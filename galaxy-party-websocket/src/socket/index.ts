@@ -5,6 +5,7 @@ import { registerGameHandlers } from "./handlers/game.js";
 import { registerFriendHandlers, broadcastStatus, sendFriendList } from "./handlers/friend.js";
 import { leaveRoom } from "../services/room.service.js";
 import { deleteSession } from "../store/game.store.js";
+import {removeSpectator} from "../store/spectator.store.js";
 import { socketAuthMiddleware } from "./auth.js";
 
 export function initSocket(io: TypedServer) {
@@ -23,8 +24,12 @@ export function initSocket(io: TypedServer) {
         }
 
         socket.on("disconnect", async () => {
-            const { userId, roomId } = socket.data;
+            const { userId, roomId, spectatingRoomId } = socket.data;
             if (!userId) return;
+
+            if (spectatingRoomId) {
+                removeSpectator(spectatingRoomId, socket.id);
+            }
 
             await broadcastStatus(io, userId, 'offline');
 

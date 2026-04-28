@@ -1,14 +1,18 @@
 import { TypedServer, TypedSocket } from '../../types/types.js';
 import { getQuestions} from '../../services/game.service.js';
-import { getSession, setSession, deleteSession } from '../../store/game.store.js';
+import { getRooms } from '../../services/room.service.js';
+import { getSession, setSession, deleteSession, getPlayerTimes, annotateRooms } from '../../store/game.store.js';
 import { GameSession } from '../../types/game/models.js';
+
+async function broadcastRoomList(io: TypedServer): Promise<void> {
+    try {
+        const rooms = await getRooms();
+        io.emit('room:list', annotateRooms(rooms));
+    } catch (_) { /* non-critique */ }
+}
 
 function normalize(str: string): string {
     return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, '');
-}
-
-function getPlayerTimes(session: GameSession): Record<string, number> {
-    return Object.fromEntries([...session.players.entries()].map(([id, p]) => [id, p.timeRemaining]));
 }
 
 function emitQuestion(io: TypedServer, session: GameSession): void {
@@ -18,6 +22,7 @@ function emitQuestion(io: TypedServer, session: GameSession): void {
         )[0];
         deleteSession(session.roomId);
         io.to(session.roomId).emit('game:over', { winnerId });
+        void broadcastRoomList(io);
         return;
     }
     const question = session.questions[session.currentQuestionIndex];
@@ -67,6 +72,7 @@ export function registerGameHandlers(io: TypedServer, socket: TypedSocket) {
 
             setSession(roomId, session);
             io.to(roomId).emit('game:loading');
+            void broadcastRoomList(io);
             ack();
         } catch (e) {
             ack('Erreur serveur');
@@ -141,6 +147,7 @@ export function registerGameHandlers(io: TypedServer, socket: TypedSocket) {
         try {
             deleteSession(roomId);
             io.to(roomId).emit('game:player_quit');
+            void broadcastRoomList(io);
             ack();
         } catch (e) {
             ack('Erreur serveur');
@@ -162,6 +169,7 @@ export function registerGameHandlers(io: TypedServer, socket: TypedSocket) {
 
             deleteSession(roomId);
             io.to(roomId).emit('game:over', { winnerId });
+            void broadcastRoomList(io);
             ack();
         } catch (e) {
             ack('Erreur serveur');
