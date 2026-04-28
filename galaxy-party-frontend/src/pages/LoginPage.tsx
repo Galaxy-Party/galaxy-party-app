@@ -1,17 +1,10 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import avatars from '../assets/avatars'
 import { useUserContext } from '../hooks/useUserContext'
 import Starfield from '../components/Starfield'
 import logo from '../assets/logo.png'
 import { ApiError } from '../api/client'
-
-const INDIGO = '#818cf8'
-const INDIGO_D = '#4f46e5'
-const BORDER = 'rgba(129,140,248,0.22)'
-const PANEL = 'rgba(12,8,28,0.82)'
-const TEXT_DIM = 'rgba(241,240,255,0.35)'
-const NAVY = '#051240'
 
 function Nebulae() {
   return (
@@ -23,10 +16,18 @@ function Nebulae() {
 }
 
 export default function LoginPage() {
-  const { user, isLoading, login } = useUserContext()
+  const { user, isLoading, login, register } = useUserContext()
   const navigate = useNavigate()
+
+  const [tab, setTab] = useState<'login' | 'register'>('login')
+
   const [emailOrUsername, setEmailOrUsername] = useState('')
-  const [password, setPassword] = useState('')
+  const [loginPassword, setLoginPassword] = useState('')
+
+  const [username, setUsername] = useState('')
+  const [email, setEmail] = useState('')
+  const [regPassword, setRegPassword] = useState('')
+
   const [avatarIndex, setAvatarIndex] = useState(0)
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
@@ -35,106 +36,114 @@ export default function LoginPage() {
     if (!isLoading && user) navigate('/menu', { replace: true })
   }, [user, isLoading, navigate])
 
-  const canSubmit = emailOrUsername.trim().length > 0 && password.length > 0 && !submitting
+  const canLogin = emailOrUsername.trim().length > 0 && loginPassword.length > 0 && !submitting
+  const canRegister = username.trim().length >= 3 && email.includes('@') && regPassword.length >= 8 && !submitting
+  const canSubmit = tab === 'login' ? canLogin : canRegister
 
-  const handleSubmit = async () => {
-    if (!canSubmit) return
-    setSubmitting(true)
-    setError(null)
+  const switchTab = (t: 'login' | 'register') => { setTab(t); setError(null) }
+
+  const handleLogin = async () => {
+    if (!canLogin) return
+    setSubmitting(true); setError(null)
     try {
-      await login({ emailOrUsername: emailOrUsername.trim(), password }, avatars[avatarIndex])
+      await login({ emailOrUsername: emailOrUsername.trim(), password: loginPassword }, avatars[avatarIndex])
       navigate('/menu', { replace: true })
     } catch (err) {
-      if (err instanceof ApiError && err.status === 401) setError('Identifiants invalides')
+      setError(err instanceof ApiError && err.status === 401 ? 'Identifiants invalides' : 'Une erreur est survenue, réessayez')
+    } finally { setSubmitting(false) }
+  }
+
+  const handleRegister = async () => {
+    if (!canRegister) return
+    setSubmitting(true); setError(null)
+    try {
+      await register({ username: username.trim(), email: email.trim(), password: regPassword, imageName: avatars[avatarIndex] })
+      navigate('/menu', { replace: true })
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 409) setError("Cet email ou ce nom d'utilisateur est déjà utilisé")
+      else if (err instanceof ApiError && err.status === 400) setError('Les informations saisies sont invalides')
       else setError('Une erreur est survenue, réessayez')
-    } finally {
-      setSubmitting(false)
-    }
+    } finally { setSubmitting(false) }
   }
 
   return (
-    <div style={{ position: 'relative', width: '100vw', height: '100vh', overflow: 'hidden', background: '#07050f', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'DM Sans', sans-serif" }}>
+    <div className="auth-page">
       <Starfield />
       <Nebulae />
 
-      <div style={{ position: 'fixed', top: 20, left: 32, zIndex: 10 }}>
+      <div className="auth-logo">
         <img src={logo} alt="Galaxy Party" style={{ height: 120, objectFit: 'contain' }} />
       </div>
 
-      <div className="card-in" style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: 580, background: PANEL, backdropFilter: 'blur(28px)', border: `1px solid ${BORDER}`, borderRadius: 28, overflow: 'hidden', boxShadow: '0 32px 80px rgba(0,0,0,0.7)', margin: '0 24px' }}>
-        <div style={{ padding: '36px 40px 40px' }}>
-          <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 26, color: '#f1f0ff', marginBottom: 4, textAlign: 'center' }}>
-            Connexion
-          </div>
-          <div style={{ fontSize: 14, color: TEXT_DIM, textAlign: 'center', marginBottom: 32 }}>
-            Reprenez l'aventure
+      <div className="auth-card card-in">
+        <div className="auth-body">
+
+          <div className="auth-tabs">
+            {(['login', 'register'] as const).map(t => (
+              <button key={t} className={`auth-tab${tab === t ? ' active' : ''}`} onClick={() => switchTab(t)}>
+                {t === 'login' ? 'Connexion' : 'Créer un compte'}
+              </button>
+            ))}
           </div>
 
-          <div style={{ marginBottom: 18 }}>
-            <label style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 11, fontWeight: 600, letterSpacing: '0.15em', textTransform: 'uppercase', color: INDIGO, marginBottom: 10, display: 'block' }}>
-              Email ou nom d'utilisateur
-            </label>
-            <input
-              type="text"
-              value={emailOrUsername}
-              onChange={e => setEmailOrUsername(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && handleSubmit()}
-              placeholder="alice@example.com"
-              style={{ width: '100%', background: 'rgba(129,140,248,0.06)', border: `1px solid ${BORDER}`, borderRadius: 14, padding: '14px 20px', color: '#f1f0ff', fontFamily: "'DM Sans', sans-serif", fontSize: 16, fontWeight: 500, outline: 'none', boxSizing: 'border-box' }}
-              autoComplete="username"
-            />
-          </div>
-
-          <div style={{ marginBottom: 24 }}>
-            <label style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 11, fontWeight: 600, letterSpacing: '0.15em', textTransform: 'uppercase', color: INDIGO, marginBottom: 10, display: 'block' }}>
-              Mot de passe
-            </label>
-            <input
-              type="password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && handleSubmit()}
-              placeholder="••••••••"
-              style={{ width: '100%', background: 'rgba(129,140,248,0.06)', border: `1px solid ${BORDER}`, borderRadius: 14, padding: '14px 20px', color: '#f1f0ff', fontFamily: "'DM Sans', sans-serif", fontSize: 16, fontWeight: 500, outline: 'none', boxSizing: 'border-box' }}
-              autoComplete="current-password"
-            />
-          </div>
-
-          <div style={{ marginBottom: 24 }}>
-            <label style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 11, fontWeight: 600, letterSpacing: '0.15em', textTransform: 'uppercase', color: INDIGO, marginBottom: 10, display: 'block' }}>
-              Votre avatar
-            </label>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 10 }}>
-              {avatars.map((src, i) => (
-                <div
-                  key={i}
-                  onClick={() => setAvatarIndex(i)}
-                  style={{ aspectRatio: '1', borderRadius: '50%', border: `2px solid ${i === avatarIndex ? INDIGO : 'rgba(129,140,248,0.2)'}`, background: NAVY, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s', overflow: 'hidden', padding: 8, boxShadow: i === avatarIndex ? '0 0 16px rgba(129,140,248,0.25)' : 'none' }}
-                >
-                  <img src={src} alt={`avatar-${i}`} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-                </div>
-              ))}
+          {tab === 'login' && (
+            <div className="fade-in">
+              <div className="auth-field">
+                <label className="auth-label">Nom d'utilisateur ou email</label>
+                <input className="auth-input" type="text" value={emailOrUsername} autoFocus autoComplete="username"
+                  placeholder="Votre pseudo…" onChange={e => setEmailOrUsername(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleLogin()} />
+              </div>
+              <div className="auth-field">
+                <label className="auth-label">Mot de passe</label>
+                <input className="auth-input" type="password" value={loginPassword} autoComplete="current-password"
+                  placeholder="••••••••" onChange={e => setLoginPassword(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleLogin()} />
+              </div>
             </div>
-          </div>
-
-          {error && (
-            <div style={{ color: '#fca5a5', fontSize: 14, marginBottom: 16, textAlign: 'center' }}>{error}</div>
           )}
 
-          <button
-            disabled={!canSubmit}
-            onClick={handleSubmit}
-            style={{ width: '100%', height: 56, borderRadius: 14, border: 'none', background: `linear-gradient(135deg,${INDIGO_D},#7c3aed)`, color: 'white', fontFamily: "'Space Grotesk', sans-serif", fontSize: 15, fontWeight: 700, letterSpacing: '0.04em', cursor: canSubmit ? 'pointer' : 'default', boxShadow: '0 4px 20px rgba(79,70,229,0.4)', transition: 'all 0.2s', opacity: canSubmit ? 1 : 0.35, marginTop: 8 }}
-          >
-            {submitting ? 'Connexion...' : 'Se connecter'}
-          </button>
+          {tab === 'register' && (
+            <div className="fade-in">
+              <div className="auth-field">
+                <label className="auth-label">Nom d'utilisateur</label>
+                <input className="auth-input" type="text" value={username} autoFocus autoComplete="username"
+                  placeholder="Galaxy" onChange={e => setUsername(e.target.value)} />
+              </div>
+              <div className="auth-field">
+                <label className="auth-label">Email</label>
+                <input className="auth-input" type="email" value={email} autoComplete="email"
+                  placeholder="alice@example.com" onChange={e => setEmail(e.target.value)} />
+              </div>
+              <div className="auth-field">
+                <label className="auth-label">Mot de passe (min. 8 caractères)</label>
+                <input className="auth-input" type="password" value={regPassword} autoComplete="new-password"
+                  placeholder="••••••••" onChange={e => setRegPassword(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleRegister()} />
+              </div>
+            </div>
+          )}
 
-          <div style={{ marginTop: 20, textAlign: 'center', fontSize: 14, color: TEXT_DIM }}>
-            Pas encore de compte ?{' '}
-            <Link to="/register" style={{ color: INDIGO, textDecoration: 'none', fontWeight: 600 }}>
-              S'inscrire
-            </Link>
+          <label className="auth-label">Votre avatar</label>
+          <div className="auth-avatar-grid">
+            {avatars.map((src, i) => (
+              <div key={i} className={`auth-avatar-cell${i === avatarIndex ? ' selected' : ''}`} onClick={() => setAvatarIndex(i)}>
+                <img src={src} alt={`avatar-${i}`} />
+              </div>
+            ))}
           </div>
+
+          {error && <div className="auth-error">{error}</div>}
+
+          <button
+            className="auth-submit"
+            disabled={!canSubmit}
+            onClick={tab === 'login' ? handleLogin : handleRegister}
+          >
+            {submitting
+              ? (tab === 'login' ? 'Connexion…' : 'Création…')
+              : (tab === 'login' ? 'Se connecter' : 'Créer mon compte')}
+          </button>
         </div>
       </div>
     </div>

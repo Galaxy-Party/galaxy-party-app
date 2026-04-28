@@ -3,7 +3,6 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import './index.css'
 import LoginPage from './pages/LoginPage.tsx'
-import RegisterPage from './pages/RegisterPage.tsx'
 import ProfilePage from './pages/ProfilePage.tsx'
 import MenuPage from './pages/MenuPage.tsx'
 import RulesPage from './pages/RulesPage.tsx'
@@ -22,7 +21,6 @@ createRoot(document.getElementById('root')!).render(
       <UserProvider>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
           <Route element={<ProtectedRoute />}>
             <Route element={<AppLayout />}>
               <Route path="/menu" element={<MenuPage />} />
