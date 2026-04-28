@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import avatars from '../assets/avatars'
 import { useUserContext } from '../hooks/useUserContext'
 import Starfield from '../components/Starfield'
 import logo from '../assets/logo.png'
+import { ApiError } from '../api/client'
 
 const INDIGO = '#818cf8'
 const INDIGO_D = '#4f46e5'
@@ -21,22 +22,34 @@ function Nebulae() {
   )
 }
 
-export default function CreateUserPage() {
-  const { user, isLoading, createUser } = useUserContext()
+export default function LoginPage() {
+  const { user, isLoading, login } = useUserContext()
   const navigate = useNavigate()
+  const [emailOrUsername, setEmailOrUsername] = useState('')
+  const [password, setPassword] = useState('')
   const [avatarIndex, setAvatarIndex] = useState(0)
-  const [username, setUsername] = useState('')
-  const [imageName, setImageName] = useState<string>(avatars[0])
+  const [error, setError] = useState<string | null>(null)
+  const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
     if (!isLoading && user) navigate('/menu', { replace: true })
   }, [user, isLoading, navigate])
 
-  useEffect(() => { setImageName(avatars[avatarIndex]) }, [avatarIndex])
+  const canSubmit = emailOrUsername.trim().length > 0 && password.length > 0 && !submitting
 
-  const handleSubmit = () => {
-    if (!username.trim()) return
-    createUser({ username, imageName })
+  const handleSubmit = async () => {
+    if (!canSubmit) return
+    setSubmitting(true)
+    setError(null)
+    try {
+      await login({ emailOrUsername: emailOrUsername.trim(), password }, avatars[avatarIndex])
+      navigate('/menu', { replace: true })
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 401) setError('Identifiants invalides')
+      else setError('Une erreur est survenue, réessayez')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -51,28 +64,43 @@ export default function CreateUserPage() {
       <div className="card-in" style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: 580, background: PANEL, backdropFilter: 'blur(28px)', border: `1px solid ${BORDER}`, borderRadius: 28, overflow: 'hidden', boxShadow: '0 32px 80px rgba(0,0,0,0.7)', margin: '0 24px' }}>
         <div style={{ padding: '36px 40px 40px' }}>
           <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 26, color: '#f1f0ff', marginBottom: 4, textAlign: 'center' }}>
-            Bienvenue !
+            Connexion
           </div>
           <div style={{ fontSize: 14, color: TEXT_DIM, textAlign: 'center', marginBottom: 32 }}>
-            Choisissez votre nom et votre avatar pour commencer
+            Reprenez l'aventure
           </div>
 
-          <div style={{ marginBottom: 28 }}>
+          <div style={{ marginBottom: 18 }}>
             <label style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 11, fontWeight: 600, letterSpacing: '0.15em', textTransform: 'uppercase', color: INDIGO, marginBottom: 10, display: 'block' }}>
-              Votre nom
+              Email ou nom d'utilisateur
             </label>
             <input
               type="text"
-              value={username}
-              onChange={e => setUsername(e.target.value)}
+              value={emailOrUsername}
+              onChange={e => setEmailOrUsername(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleSubmit()}
-              placeholder="Entrez votre nom…"
-              style={{ width: '100%', background: 'rgba(129,140,248,0.06)', border: `1px solid ${BORDER}`, borderRadius: 14, padding: '14px 20px', color: '#f1f0ff', fontFamily: "'DM Sans', sans-serif", fontSize: 16, fontWeight: 500, outline: 'none', boxSizing: 'border-box', textAlign: 'center' }}
-              autoComplete="off"
+              placeholder="alice@example.com"
+              style={{ width: '100%', background: 'rgba(129,140,248,0.06)', border: `1px solid ${BORDER}`, borderRadius: 14, padding: '14px 20px', color: '#f1f0ff', fontFamily: "'DM Sans', sans-serif", fontSize: 16, fontWeight: 500, outline: 'none', boxSizing: 'border-box' }}
+              autoComplete="username"
             />
           </div>
 
-          <div style={{ marginBottom: 28 }}>
+          <div style={{ marginBottom: 24 }}>
+            <label style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 11, fontWeight: 600, letterSpacing: '0.15em', textTransform: 'uppercase', color: INDIGO, marginBottom: 10, display: 'block' }}>
+              Mot de passe
+            </label>
+            <input
+              type="password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleSubmit()}
+              placeholder="••••••••"
+              style={{ width: '100%', background: 'rgba(129,140,248,0.06)', border: `1px solid ${BORDER}`, borderRadius: 14, padding: '14px 20px', color: '#f1f0ff', fontFamily: "'DM Sans', sans-serif", fontSize: 16, fontWeight: 500, outline: 'none', boxSizing: 'border-box' }}
+              autoComplete="current-password"
+            />
+          </div>
+
+          <div style={{ marginBottom: 24 }}>
             <label style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 11, fontWeight: 600, letterSpacing: '0.15em', textTransform: 'uppercase', color: INDIGO, marginBottom: 10, display: 'block' }}>
               Votre avatar
             </label>
@@ -89,13 +117,24 @@ export default function CreateUserPage() {
             </div>
           </div>
 
+          {error && (
+            <div style={{ color: '#fca5a5', fontSize: 14, marginBottom: 16, textAlign: 'center' }}>{error}</div>
+          )}
+
           <button
-            disabled={!username.trim()}
+            disabled={!canSubmit}
             onClick={handleSubmit}
-            style={{ width: '100%', height: 56, borderRadius: 14, border: 'none', background: `linear-gradient(135deg,${INDIGO_D},#7c3aed)`, color: 'white', fontFamily: "'Space Grotesk', sans-serif", fontSize: 15, fontWeight: 700, letterSpacing: '0.04em', cursor: username.trim() ? 'pointer' : 'default', boxShadow: '0 4px 20px rgba(79,70,229,0.4)', transition: 'all 0.2s', opacity: username.trim() ? 1 : 0.35, marginTop: 28 }}
+            style={{ width: '100%', height: 56, borderRadius: 14, border: 'none', background: `linear-gradient(135deg,${INDIGO_D},#7c3aed)`, color: 'white', fontFamily: "'Space Grotesk', sans-serif", fontSize: 15, fontWeight: 700, letterSpacing: '0.04em', cursor: canSubmit ? 'pointer' : 'default', boxShadow: '0 4px 20px rgba(79,70,229,0.4)', transition: 'all 0.2s', opacity: canSubmit ? 1 : 0.35, marginTop: 8 }}
           >
-            Commencer l'aventure
+            {submitting ? 'Connexion...' : 'Se connecter'}
           </button>
+
+          <div style={{ marginTop: 20, textAlign: 'center', fontSize: 14, color: TEXT_DIM }}>
+            Pas encore de compte ?{' '}
+            <Link to="/register" style={{ color: INDIGO, textDecoration: 'none', fontWeight: 600 }}>
+              S'inscrire
+            </Link>
+          </div>
         </div>
       </div>
     </div>

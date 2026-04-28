@@ -1,12 +1,14 @@
-import { createContext } from "react";
-import type {CreateUserPayload, User} from "../types/user/models.ts";
+import { createContext } from 'react'
+import type { User } from '../types/user/models.ts'
+import type { LoginPayload, RegisterPayload, UpdateProfilePayload } from '../api/auth.ts'
 
 export type UserContextType = {
-    user: User | null;
-    setUser: (user: User) => void;
-    logout: () => void;
-    createUser: (createUserDto: CreateUserPayload) => void;
-    isLoading: boolean;
-};
+    user: User | null
+    isLoading: boolean
+    register: (payload: RegisterPayload) => Promise<User>
+    login: (payload: LoginPayload, imageName?: string) => Promise<User>
+    logout: () => Promise<void>
+    updateProfile: (payload: UpdateProfilePayload) => Promise<User>
+}
 
-export const UserContext = createContext<UserContextType | undefined>(undefined);
+export const UserContext = createContext<UserContextType | undefined>(undefined)

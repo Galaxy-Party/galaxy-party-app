@@ -1,5 +1,5 @@
 import { TypedServer, TypedSocket } from '../../types/types.js';
-import { getQuestions } from '../../services/game.service.js';
+import { getQuestions} from '../../services/game.service.js';
 import { getSession, setSession, deleteSession } from '../../store/game.store.js';
 import { GameSession } from '../../types/game/models.js';
 
@@ -39,8 +39,10 @@ function deductElapsed(session: GameSession, userId: string): void {
 
 export function registerGameHandlers(io: TypedServer, socket: TypedSocket) {
 
-    socket.on('game:start', async ({ roomId, userId, timer }, ack) => {
+    socket.on('game:start', async ({ roomId, timer }, ack) => {
         try {
+            const userId = socket.data.userId;
+            if (!userId) return ack('Non authentifié');
             if (getSession(roomId)) return ack('Partie déjà en cours');
 
             const questions = await getQuestions();
@@ -71,8 +73,10 @@ export function registerGameHandlers(io: TypedServer, socket: TypedSocket) {
         }
     });
 
-    socket.on('game:player_ready', ({ roomId, userId }, ack) => {
+    socket.on('game:player_ready', ({ roomId }, ack) => {
         try {
+            const userId = socket.data.userId;
+            if (!userId) return ack('Non authentifié');
             const session = getSession(roomId);
             if (!session) return ack('Session introuvable');
 
@@ -99,8 +103,10 @@ export function registerGameHandlers(io: TypedServer, socket: TypedSocket) {
         }
     });
 
-    socket.on('game:answer', ({ roomId, userId, answer }, ack) => {
+    socket.on('game:answer', ({ roomId, answer }, ack) => {
         try {
+            const userId = socket.data.userId;
+            if (!userId) return ack('Non authentifié');
             const session = getSession(roomId);
             if (!session) return ack('Session introuvable');
             if (session.currentPlayerId !== userId) return ack('Ce n\'est pas ton tour');
@@ -141,8 +147,10 @@ export function registerGameHandlers(io: TypedServer, socket: TypedSocket) {
         }
     });
 
-    socket.on('game:time_up', ({ roomId, userId }, ack) => {
+    socket.on('game:time_up', ({ roomId }, ack) => {
         try {
+            const userId = socket.data.userId;
+            if (!userId) return ack('Non authentifié');
             const session = getSession(roomId);
             if (!session) return ack('Session introuvable');
             if (session.currentPlayerId !== userId) return ack();

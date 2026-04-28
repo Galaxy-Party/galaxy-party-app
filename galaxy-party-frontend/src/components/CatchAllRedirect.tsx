@@ -6,5 +6,5 @@ export default function CatchAllRedirect() {
 
     if (isLoading) return null
 
-    return <Navigate to={user ? '/menu' : '/'} replace />
+    return <Navigate to={user ? '/menu' : '/login'} replace />
 }

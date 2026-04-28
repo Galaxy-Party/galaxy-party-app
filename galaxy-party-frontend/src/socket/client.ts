@@ -3,9 +3,13 @@ import type {ClientToServerEvents, ServerToClientEvents} from "../types/sockets.
 
 type ClientSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
 
-const socket: ClientSocket = io(import.meta.env.VITE_WS_URL, {
+const wsUrl = import.meta.env.VITE_WS_URL || window.location.origin;
+
+const socket: ClientSocket = io(wsUrl, {
     path: "/ws",
-    transports: ["polling", "websocket"]
+    transports: ["polling", "websocket"],
+    withCredentials: true,
+    autoConnect: false,
 });
 
 export default socket;

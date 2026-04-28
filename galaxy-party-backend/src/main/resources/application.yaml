@@ -28,3 +28,15 @@ server:
   servlet:
     context-path: "/api"
   port: ${PORT:8080}
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:VXZhVYwIEbxY4yQ6k4iiu0QegufOMA95/GgbVPUccaxfjxNJ8zcXTuvmluLARjyM7ieR10YCFl2KvfeDruY7rQ==}
+    issuer: galaxy-party
+    access-ttl: 15m
+    refresh-ttl: 7d
+  ws:
+    service-token: ${WS_SERVICE_TOKEN:L8KlsEj6YGT1Ajz36cGbX4QOyXv9lbAqIfM7JlPVhKg0OanoVe6dVoOrsotOc2Sj}
+  cookie:
+    secure: ${COOKIE_SECURE:false}
+    same-site: ${COOKIE_SAME_SITE:Lax}

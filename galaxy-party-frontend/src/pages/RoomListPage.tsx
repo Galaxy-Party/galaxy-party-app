@@ -39,7 +39,7 @@ export default function RoomListPage() {
   const closeModal = () => setSelectedRoom(null)
   const handleJoin = (password: string) => {
     if (!selectedRoom || !user) return
-    socket.emit('room:join', { roomId: selectedRoom.id, userId: user.id, password }, (err) => {
+    socket.emit('room:join', { roomId: selectedRoom.id, password }, (err) => {
       if (err) return console.error(err)
       navigate('/rooms/' + selectedRoom.id)
       closeModal()

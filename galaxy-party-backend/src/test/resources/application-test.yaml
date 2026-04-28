@@ -12,3 +12,11 @@ spring:
 
   flyway:
     enabled: false
+
+app:
+  jwt:
+    # 64-byte base64-encoded secret used only by tests
+    secret: dGVzdC1zZWNyZXQtdGVzdC1zZWNyZXQtdGVzdC1zZWNyZXQtdGVzdC1zZWNyZXQtdGVzdC1zZWNyZXQtdGVzdC1zZWNyZXQ=
+    issuer: galaxy-party
+    access-ttl: 15m
+    refresh-ttl: 7d
