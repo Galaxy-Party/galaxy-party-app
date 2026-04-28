@@ -253,7 +253,7 @@ export default function GamePage() {
       <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: 520, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20 }}>
         {answerResult && (
           <div style={{ textAlign: 'center', fontSize: 15, fontWeight: 600, color: answerResult.correct ? '#34d399' : ROSE }}>
-            {answerResult.correct ? 'Bonne réponse !' : `Mauvaise réponse — La bonne réponse était : ${answerResult.correctAnswer}`}
+            {answerResult.correct ? `Bonne réponse : ${answerResult.correctAnswer}` : `Mauvaise réponse — La bonne réponse était : ${answerResult.correctAnswer}`}
           </div>
         )}
         <input

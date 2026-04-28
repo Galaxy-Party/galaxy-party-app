@@ -109,7 +109,7 @@ export function registerGameHandlers(io: TypedServer, socket: TypedSocket) {
 
             const question = session.questions[session.currentQuestionIndex];
             const correct = question.answers.some(a => normalize(a.answer) === normalize(answer));
-            const correctAnswer = question.answers[0].answer;
+            const correctAnswer = question.displayAnswer ?? question.answers[0].answer;
 
             io.to(roomId).emit('game:answer_result', {
                 correct,
@@ -125,7 +125,7 @@ export function registerGameHandlers(io: TypedServer, socket: TypedSocket) {
             }
             session.currentQuestionIndex++;
 
-            setTimeout(() => emitQuestion(io, session), correct ? 1500 : 2000);
+            setTimeout(() => emitQuestion(io, session), correct ? 1000 : 2000);
         } catch (e) {
             ack('Erreur serveur');
         }

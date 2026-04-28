@@ -10,10 +10,12 @@ import lombok.Data;
 public class CreateQuestionDto {
     @NotNull
     private String label;
+    private String displayAnswer;
 
     public static QuestionEntity toQuestionEntity(CreateQuestionDto createQuestionDto) {
         return QuestionEntity.builder()
                 .label(createQuestionDto.getLabel())
+                .displayAnswer(createQuestionDto.getDisplayAnswer())
                 .build();
     }
 }

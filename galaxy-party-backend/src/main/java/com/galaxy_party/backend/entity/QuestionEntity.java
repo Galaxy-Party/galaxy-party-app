@@ -35,6 +35,9 @@ public class QuestionEntity {
     @Column(nullable = false)
     private String label;
 
+    @Column(name = "display_answer")
+    private String displayAnswer;
+
     @OneToMany(
             mappedBy = "question",
             cascade = CascadeType.ALL,
@@ -46,6 +49,7 @@ public class QuestionEntity {
         return QuestionDto.builder()
                 .id(questionEntity.getId())
                 .label(questionEntity.getLabel())
+                .displayAnswer(questionEntity.getDisplayAnswer())
                 .answers(questionEntity.getAnswers().stream().map(AnswerEntity::toAnswerDto).toList())
                 .build();
     }
