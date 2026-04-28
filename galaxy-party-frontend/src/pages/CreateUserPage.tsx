@@ -83,7 +83,7 @@ export default function CreateUserPage() {
                   onClick={() => setAvatarIndex(i)}
                   style={{ aspectRatio: '1', borderRadius: '50%', border: `2px solid ${i === avatarIndex ? INDIGO : 'rgba(129,140,248,0.2)'}`, background: NAVY, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s', overflow: 'hidden', padding: 8, boxShadow: i === avatarIndex ? '0 0 16px rgba(129,140,248,0.25)' : 'none' }}
                 >
-                  <img src={src} alt={`avatar-${i}`} style={{ width: '80%', height: '80%', objectFit: 'contain' }} />
+                  <img src={src} alt={`avatar-${i}`} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                 </div>
               ))}
             </div>

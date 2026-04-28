@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 @keyframes nf {
   from { transform: translate(0, 0) scale(1); }
   to { transform: translate(22px, 14px) scale(1.09); }
