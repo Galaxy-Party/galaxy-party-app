@@ -248,7 +248,7 @@ export default function WaitingRoomPage() {
               disabled={!isOwner || room.users.length < 2 || isStarting}
               onClick={() => {
                 setIsStarting(true)
-                socket.emit('game:start', { roomId: id!, userId: user!.id }, (err) => {
+                socket.emit('game:start', { roomId: id!, userId: user!.id, timer }, (err) => {
                   if (err) { console.error(err); setIsStarting(false) }
                 })
               }}

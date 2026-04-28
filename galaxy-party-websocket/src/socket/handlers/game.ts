@@ -37,11 +37,9 @@ function deductElapsed(session: GameSession, userId: string): void {
     session.turnStartedAt = null;
 }
 
-const TIMER_MS = 150_000; // 2:30
-
 export function registerGameHandlers(io: TypedServer, socket: TypedSocket) {
 
-    socket.on('game:start', async ({ roomId, userId }, ack) => {
+    socket.on('game:start', async ({ roomId, userId, timer }, ack) => {
         try {
             if (getSession(roomId)) return ack('Partie déjà en cours');
 
@@ -56,6 +54,7 @@ export function registerGameHandlers(io: TypedServer, socket: TypedSocket) {
             const session: GameSession = {
                 roomId,
                 ownerId: userId,
+                timer,
                 questions,
                 currentQuestionIndex: 0,
                 currentPlayerId: userId,
@@ -77,7 +76,7 @@ export function registerGameHandlers(io: TypedServer, socket: TypedSocket) {
             const session = getSession(roomId);
             if (!session) return ack('Session introuvable');
 
-            session.players.set(userId, { userId, timeRemaining: TIMER_MS });
+            session.players.set(userId, { userId, timeRemaining: session.timer });
             session.readyPlayers.add(socket.id);
             ack();
 

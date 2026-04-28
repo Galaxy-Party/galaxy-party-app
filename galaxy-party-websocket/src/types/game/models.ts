@@ -17,6 +17,7 @@ export interface PlayerGameState {
 export interface GameSession {
     roomId: string;
     ownerId: string;
+    timer: number;
     questions: Question[];
     currentQuestionIndex: number;
     currentPlayerId: string;
