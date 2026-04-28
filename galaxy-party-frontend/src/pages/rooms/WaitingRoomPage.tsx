@@ -87,7 +87,7 @@ export default function WaitingRoomPage() {
 
   const handleLeave = () => {
     if (!id || !user) return
-    socket.emit('room:leave', { roomId: id, userId: user.id }, (err) => {
+    socket.emit('room:leave', { roomId: id }, (err) => {
       if (err) console.error(err)
       navigate('/menu')
     })
@@ -248,7 +248,7 @@ export default function WaitingRoomPage() {
               disabled={!isOwner || room.users.length < 2 || isStarting}
               onClick={() => {
                 setIsStarting(true)
-                socket.emit('game:start', { roomId: id!, userId: user!.id }, (err) => {
+                socket.emit('game:start', { roomId: id!, timer }, (err) => {
                   if (err) { console.error(err); setIsStarting(false) }
                 })
               }}

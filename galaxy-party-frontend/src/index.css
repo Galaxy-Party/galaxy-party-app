@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+@theme {
+  --font-display: 'Space Grotesk', sans-serif;
+}
+
 @keyframes spin {
   to { transform: rotate(360deg); }
 }

@@ -25,7 +25,7 @@ export default function RoomCreationPage() {
 
   const handleCreate = () => {
     if (!name.trim() || !user) return
-    socket.emit('room:create', { name: name.trim(), password: password || null, ownerId: user.id }, (err?: string) => {
+    socket.emit('room:create', { name: name.trim(), password: password || null }, (err?: string) => {
       if (err) console.error(err)
     })
   }

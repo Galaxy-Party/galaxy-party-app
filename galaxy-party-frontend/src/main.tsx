@@ -2,7 +2,8 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import './index.css'
-import CreateUserPage from './pages/CreateUserPage.tsx'
+import LoginPage from './pages/LoginPage.tsx'
+import ProfilePage from './pages/ProfilePage.tsx'
 import MenuPage from './pages/MenuPage.tsx'
 import RulesPage from './pages/RulesPage.tsx'
 import RoomCreationPage from './pages/RoomCreationPage.tsx'
@@ -19,11 +20,12 @@ createRoot(document.getElementById('root')!).render(
     <BrowserRouter>
       <UserProvider>
         <Routes>
-          <Route path="/" element={<CreateUserPage />} />
+          <Route path="/login" element={<LoginPage />} />
           <Route element={<ProtectedRoute />}>
             <Route element={<AppLayout />}>
               <Route path="/menu" element={<MenuPage />} />
               <Route path="/rules" element={<RulesPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
               <Route path="/create-room" element={<RoomCreationPage />} />
               <Route path="/rooms" element={<RoomListPage />} />
             </Route>

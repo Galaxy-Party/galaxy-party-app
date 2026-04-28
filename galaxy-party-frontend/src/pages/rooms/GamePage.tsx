@@ -53,7 +53,7 @@ export default function GamePage() {
   useEffect(() => {
     if (!id || !user) return
     socket.emit('room:get', id, (err) => { if (err) console.error(err) })
-    socket.emit('game:player_ready', { roomId: id, userId: user.id }, (err) => { if (err) console.error(err) })
+    socket.emit('game:player_ready', { roomId: id }, (err) => { if (err) console.error(err) })
   }, [id, user])
 
   useEffect(() => {
@@ -64,7 +64,7 @@ export default function GamePage() {
         if (current <= 1000) {
           clearInterval(timerRef.current!)
           if (currentPlayerId === user.id) {
-            socket.emit('game:time_up', { roomId: id, userId: user.id }, () => {})
+            socket.emit('game:time_up', { roomId: id }, () => {})
           }
           return { ...prev, [currentPlayerId]: 0 }
         }
@@ -109,7 +109,7 @@ export default function GamePage() {
 
   const submitAnswer = useCallback(() => {
     if (currentPlayerId !== user?.id || !answer.trim() || !id || !user) return
-    socket.emit('game:answer', { roomId: id, userId: user.id, answer }, (err) => { if (err) console.error(err) })
+    socket.emit('game:answer', { roomId: id, answer }, (err) => { if (err) console.error(err) })
   }, [currentPlayerId, user, answer, id])
 
   const activeRing: React.CSSProperties = {
@@ -253,7 +253,7 @@ export default function GamePage() {
       <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: 520, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20 }}>
         {answerResult && (
           <div style={{ textAlign: 'center', fontSize: 15, fontWeight: 600, color: answerResult.correct ? '#34d399' : ROSE }}>
-            {answerResult.correct ? 'Bonne réponse !' : `Mauvaise réponse — La bonne réponse était : ${answerResult.correctAnswer}`}
+            {answerResult.correct ? `Bonne réponse : ${answerResult.correctAnswer}` : `Mauvaise réponse — La bonne réponse était : ${answerResult.correctAnswer}`}
           </div>
         )}
         <input

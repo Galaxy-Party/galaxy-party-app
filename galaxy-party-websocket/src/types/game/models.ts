@@ -6,6 +6,7 @@ export interface Answer {
 export interface Question {
     id: string;
     label: string;
+    displayAnswer: string | null;
     answers: Answer[];
 }
 
@@ -17,6 +18,7 @@ export interface PlayerGameState {
 export interface GameSession {
     roomId: string;
     ownerId: string;
+    timer: number;
     questions: Question[];
     currentQuestionIndex: number;
     currentPlayerId: string;

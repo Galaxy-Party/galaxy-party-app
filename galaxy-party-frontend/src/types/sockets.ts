@@ -1,5 +1,5 @@
 import type {Hello} from "./models.ts";
-import type {CreateUserPayload, User} from "./user/models.ts";
+import type {User} from "./user/models.ts";
 import type {CreateRoomPayload, Room} from "./room/models.ts";
 
 export interface ServerToClientEvents {
@@ -11,8 +11,6 @@ export interface ServerToClientEvents {
     "game:over": (data: { winnerId: string }) => void;
     "game:player_quit": () => void;
     "hello:message": (hello: Hello) => void;
-    "user:created": (user: User) => void;
-    "user:received": (user:User) => void;
     "room:created": (room: Room) => void;
     "room:deleted": (roomId: string) => void;
     "room:list": (rooms: Room[]) => void;
@@ -24,30 +22,21 @@ export interface ServerToClientEvents {
 
 export interface ClientToServerEvents {
     "hello:send": (hello: Hello) => void;
-    "user:register": (userId: string) => void;
-    "user:create": (
-        payload: CreateUserPayload,
-        ack: (err?: string) => void
-    ) => void;
-    "user:get": (
-        id: string,
-        ack: (err?: string) => void
-    ) => void;
     "room:create": (
-        payload: CreateRoomPayload,
+        payload: Omit<CreateRoomPayload, "ownerId">,
         ack: (err?: string) => void
     ) => void;
     "room:get_all": (ack: (err?: string) => void) => void;
-    "game:start": (payload: { roomId: string; userId: string }, ack: (err?: string) => void) => void;
-    "game:player_ready": (payload: { roomId: string; userId: string }, ack: (err?: string) => void) => void;
-    "game:answer": (payload: { roomId: string; userId: string; answer: string }, ack: (err?: string) => void) => void;
-    "game:time_up": (payload: { roomId: string; userId: string }, ack: (err?: string) => void) => void;
+    "game:start": (payload: { roomId: string; timer: number }, ack: (err?: string) => void) => void;
+    "game:player_ready": (payload: { roomId: string }, ack: (err?: string) => void) => void;
+    "game:answer": (payload: { roomId: string; answer: string }, ack: (err?: string) => void) => void;
+    "game:time_up": (payload: { roomId: string }, ack: (err?: string) => void) => void;
     "game:quit": (payload: { roomId: string }, ack: (err?: string) => void) => void;
     "room:delete": (roomId: string, ack: (err?: string) => void) => void;
     "room:get": (roomId: string, ack: (err?: string) => void) => void;
-    "room:leave": (payload: { roomId: string; userId: string }, ack: (err?: string) => void) => void;
+    "room:leave": (payload: { roomId: string }, ack: (err?: string) => void) => void;
     "room:join": (
-        payload: { roomId: string; userId: string; password?: string },
+        payload: { roomId: string; password?: string },
         ack: (err?: string) => void
     ) => void;
     "room:update": (

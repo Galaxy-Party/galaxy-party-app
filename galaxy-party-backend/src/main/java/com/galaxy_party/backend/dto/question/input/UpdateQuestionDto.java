@@ -13,6 +13,7 @@ public class UpdateQuestionDto {
     @NotNull
     private UUID id;
     private String label;
+    private String displayAnswer;
 
     public static QuestionEntity toQuestionEntity(UpdateQuestionDto updateQuestionDto) {
         return QuestionEntity.builder()

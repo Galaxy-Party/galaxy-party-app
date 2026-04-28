@@ -25,7 +25,12 @@ public class UserService {
     public UserEntity updateUser(UUID userid, UpdateUserDto updateUserDto) {
         UserEntity userEntity = this.findById(userid);
 
-        userEntity.setUsername(updateUserDto.getUsername());
+        if (updateUserDto.getUsername() != null) {
+            userEntity.setUsername(updateUserDto.getUsername());
+        }
+        if (updateUserDto.getImageName() != null) {
+            userEntity.setImageName(updateUserDto.getImageName());
+        }
 
         return userRepository.save(userEntity);
     }

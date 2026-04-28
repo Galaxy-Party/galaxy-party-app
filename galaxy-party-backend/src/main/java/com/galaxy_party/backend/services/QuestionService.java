@@ -27,6 +27,7 @@ public class QuestionService {
                 .orElseThrow(() -> new RuntimeException("Question not found"));
 
         questionEntity.setLabel(updateQuestionDto.getLabel());
+        if (updateQuestionDto.getDisplayAnswer() != null) questionEntity.setDisplayAnswer(updateQuestionDto.getDisplayAnswer());
 
         return questionRepository.save(questionEntity);
     }
