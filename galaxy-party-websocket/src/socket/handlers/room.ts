@@ -3,6 +3,7 @@ import {CreateRoomPayload} from "../../types/room/models.js";
 import {createRoom, deleteRoom, getRoomById, getRooms, joinRoom, leaveRoom, updateRoom} from "../../services/room.service.js";
 import {getUser} from "../../services/user.service.js";
 import {deleteSession} from "../../store/game.store.js";
+import {broadcastStatus} from "./friend.js";
 
 export function registerRoomHandlers(
     io: TypedServer,
@@ -43,6 +44,7 @@ export function registerRoomHandlers(
             io.to(roomId).emit("room:user_joined", user);
             const rooms = await getRooms();
             io.emit("room:list", rooms);
+            await broadcastStatus(io, userId, 'ingame');
             ack();
         } catch (e) {
             ack("Erreur serveur");
@@ -56,6 +58,7 @@ export function registerRoomHandlers(
             socket.data.roomId = undefined;
             socket.leave(roomId);
             deleteSession(roomId);
+            await broadcastStatus(io, userId, 'online');
             const updatedRoom = await leaveRoom(roomId, userId);
             if (updatedRoom) {
                 io.to(roomId).emit("room:user_left", userId);
