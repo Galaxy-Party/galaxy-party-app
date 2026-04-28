@@ -125,7 +125,7 @@ export function registerGameHandlers(io: TypedServer, socket: TypedSocket) {
             }
             session.currentQuestionIndex++;
 
-            setTimeout(() => emitQuestion(io, session), correct ? 1500 : 2000);
+            setTimeout(() => emitQuestion(io, session), correct ? 1000 : 2000);
         } catch (e) {
             ack('Erreur serveur');
         }
