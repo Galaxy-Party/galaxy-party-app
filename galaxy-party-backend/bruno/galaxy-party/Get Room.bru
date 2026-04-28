@@ -1,0 +1,15 @@
+meta {
+  name: Get Room
+  type: http
+  seq: 2
+}
+
+get {
+  url: http://localhost:8080/api/rooms/id
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+}

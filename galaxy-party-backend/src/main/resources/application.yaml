@@ -1,13 +1,26 @@
 spring:
-  jpa:
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
   datasource:
     url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/galaxy_party_db}
     username: ${DATABASE_USER:admin}
     password: ${DATABASE_PASSWORD:admin}
     driver-class-name: org.postgresql.Driver
+  jpa:
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+    database: POSTGRESQL
+    show-sql: false
+    generate-ddl: false
+    hibernate:
+      ddl-auto: none
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/galaxy_party_db}
+    password: ${DATABASE_PASSWORD:admin}
+    user: ${DATABASE_USER:admin}
   application:
     name: backend
 

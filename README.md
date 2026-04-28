@@ -2,11 +2,11 @@
 
 ## Prod
 ```bash
-docker compose -f docker-compose.prod.yml up -d --build
+docker-compose-v2 -f docker-compose.prod.yml -p prod up -d
 ```
 
 ## Staging
 
 ```bash
-docker compose -f docker-compose.staging.yml up -d --build
+docker-compose-v2 -f docker-compose.staging.yml -p staging up -d
 ```
