@@ -34,6 +34,7 @@ export default function WaitingRoomPage() {
   const [isPrivate, setIsPrivate] = useState(false)
   const [password, setPassword] = useState('')
   const [room, setRoom] = useState<Room | null>(null)
+  const [isStarting, setIsStarting] = useState(false)
 
   const fmt = (ms: number) => {
     const s = Math.floor(ms / 1000)
@@ -244,11 +245,21 @@ export default function WaitingRoomPage() {
               {opponent ? '2 joueurs connectés' : "En attente d'un adversaire…"}
             </div>
             <button
-              disabled={!isOwner || room.users.length < 2}
-              onClick={() => socket.emit('game:start', { roomId: id!, userId: user!.id }, (err) => { if (err) console.error(err) })}
-              style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '0 32px', height: 52, borderRadius: 41, background: 'rgba(79,70,229,0.15)', border: `1px solid ${INDIGO}`, color: '#f1f0ff', fontFamily: "'Space Grotesk', sans-serif", fontSize: 15, fontWeight: 600, cursor: (isOwner && room.users.length >= 2) ? 'pointer' : 'not-allowed', transition: 'all 0.2s', opacity: (isOwner && room.users.length >= 2) ? 1 : 0.35 }}
+              disabled={!isOwner || room.users.length < 2 || isStarting}
+              onClick={() => {
+                setIsStarting(true)
+                socket.emit('game:start', { roomId: id!, userId: user!.id }, (err) => {
+                  if (err) { console.error(err); setIsStarting(false) }
+                })
+              }}
+              style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 10, padding: '0 32px', height: 52, borderRadius: 41, background: 'rgba(79,70,229,0.15)', border: `1px solid ${INDIGO}`, color: '#f1f0ff', fontFamily: "'Space Grotesk', sans-serif", fontSize: 15, fontWeight: 600, cursor: (isOwner && room.users.length >= 2 && !isStarting) ? 'pointer' : 'not-allowed', transition: 'all 0.2s', opacity: (isOwner && room.users.length >= 2) ? 1 : 0.35 }}
             >
-              Lancer la partie
+              {isStarting && (
+                <svg style={{ width: 18, height: 18, animation: 'spin 0.8s linear infinite', flexShrink: 0 }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                  <path d="M12 2a10 10 0 0 1 10 10" />
+                </svg>
+              )}
+              {isStarting ? 'Lancement…' : 'Lancer la partie'}
             </button>
           </div>
         </div>
