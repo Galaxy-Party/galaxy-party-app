@@ -16,7 +16,7 @@ export const io: Server = new Server<
 >(httpserver, {
     path: "/ws",
     cors: {
-        origin: ["https://galaxy-party.fr", "http://localhost:5173"],
+        origin: ["https://galaxy-party.fr", "https://stg.galaxy-party.fr", "http://localhost:5173"],
         methods: ["GET", "POST"],
         credentials: true,
     },
