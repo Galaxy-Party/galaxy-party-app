@@ -9,6 +9,7 @@ import com.galaxy_party.backend.services.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -18,7 +19,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -27,6 +27,16 @@ import java.util.UUID;
 public class UserController {
     private final UserService userService;
 
+    @GetMapping("/me")
+    public ResponseEntity<UserDto> me(@AuthenticationPrincipal UserEntity currentUser) {
+        return ResponseEntity.ok(UserEntity.toUserDto(currentUser));
+    }
+
+    @PatchMapping("/me")
+    public ResponseEntity<UserDto> updateMe(@AuthenticationPrincipal UserEntity currentUser,
+                                            @RequestBody UpdateUserDto updateUserDto) {
+        return ResponseEntity.ok(UserEntity.toUserDto(userService.updateUser(currentUser.getId(), updateUserDto)));
+    }
 
     @GetMapping("/{id}")
     public ResponseEntity<UserDto> findById(@PathVariable UUID id) {
@@ -46,9 +56,7 @@ public class UserController {
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteUser(@PathVariable UUID id) {
         userService.deleteUser(id);
-        
+
         return ResponseEntity.noContent().build();
     }
-
-
 }

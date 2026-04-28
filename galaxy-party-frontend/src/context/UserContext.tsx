@@ -1,71 +1,64 @@
-// client/src/context/UserContext.tsx
-import { useEffect, useState } from "react";
-import { UserContext } from "./UserContext";
-import type {CreateUserPayload, User} from "../types/user/models.ts";
-import socket from "../socket/client.ts";
-import {useSocket} from "../hooks/useSocket.ts";
-import {useNavigate} from "react-router-dom";
+import { useCallback, useEffect, useState } from 'react'
+import { UserContext } from './UserContext'
+import type { User } from '../types/user/models.ts'
+import { ApiError } from '../api/client.ts'
+import { authApi, type LoginPayload, type RegisterPayload, type UpdateProfilePayload } from '../api/auth.ts'
+import socket from '../socket/client.ts'
+
 export function UserProvider({ children }: { children: React.ReactNode }) {
-    const stored = localStorage.getItem("galaxy-party-user-id");
-    const navigate = useNavigate();
-    const [user, setUserState] = useState<User | null>(null);
-    const [isLoading, setIsLoading] = useState(!!stored);
-
-    const setUser = (user: User) => {
-        setUserState(user);
-        localStorage.setItem("galaxy-party-user-id", user.id);
-        socket.emit("user:register", user.id);
-        setIsLoading(false);
-    };
-    const logout = () => {
-        setUserState(null);
-        localStorage.removeItem("galaxy-party-user-id");
-
-        setIsLoading(false);
-    };
-
-    const createUser = (createUserDto: CreateUserPayload) => {
-        socket.emit(
-            "user:create",
-            createUserDto,
-            (err?: string) => {
-                if (err) console.error(err);
-            }
-        );
-    }
-
-    useSocket("user:created", (user) => {
-        setUser(user);
-        navigate("/menu");
-    })
-
-    useSocket("user:received", (user) => {
-        setUser(user);
-    })
+    const [user, setUser] = useState<User | null>(null)
+    const [isLoading, setIsLoading] = useState(true)
 
     useEffect(() => {
-        if (!stored) return;
-
-        socket.emit("user:get", stored, (err?: string) => {
-            if (err) console.error(err);
-            setIsLoading(false);
-        })
-    }, [stored]);
+        let cancelled = false
+        authApi.me()
+            .then(u => { if (!cancelled) setUser(u) })
+            .catch(err => {
+                if (!(err instanceof ApiError && err.status === 401)) console.error(err)
+            })
+            .finally(() => { if (!cancelled) setIsLoading(false) })
+        return () => { cancelled = true }
+    }, [])
 
     useEffect(() => {
-        const handleReconnect = () => {
-            if (user) socket.emit("user:register", user.id);
-        };
-        socket.on("connect", handleReconnect);
-        return () => { socket.off("connect", handleReconnect); };
-    }, [user]);
+        if (!user) {
+            if (socket.connected) socket.disconnect()
+            return
+        }
+        if (!socket.connected) socket.connect()
+    }, [user])
 
+    const register = useCallback(async (payload: RegisterPayload) => {
+        const u = await authApi.register(payload)
+        setUser(u)
+        return u
+    }, [])
+
+    const login = useCallback(async (payload: LoginPayload, imageName?: string) => {
+        const u = await authApi.login(payload)
+        if (imageName && imageName !== u.imageName) {
+            const updated = await authApi.updateProfile({ imageName })
+            setUser(updated)
+            return updated
+        }
+        setUser(u)
+        return u
+    }, [])
+
+    const logout = useCallback(async () => {
+        try { await authApi.logout() } catch { /* ignore */ }
+        setUser(null)
+    }, [])
+
+    const updateProfile = useCallback(async (payload: UpdateProfilePayload) => {
+        const u = await authApi.updateProfile(payload)
+        setUser(u)
+        return u
+    }, [])
 
     return (
-        <UserContext.Provider value={{ user, setUser, logout, createUser, isLoading }}>
+        <UserContext.Provider value={{ user, isLoading, register, login, logout, updateProfile }}>
             {children}
         </UserContext.Provider>
-    );
+    )
 }
-
-

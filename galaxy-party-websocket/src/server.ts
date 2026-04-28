@@ -18,6 +18,7 @@ export const io: Server = new Server<
     cors: {
         origin: ["https://galaxy-party.fr", "http://localhost:5173"],
         methods: ["GET", "POST"],
+        credentials: true,
     },
 });
 

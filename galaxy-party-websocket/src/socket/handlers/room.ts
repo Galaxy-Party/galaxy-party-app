@@ -30,13 +30,14 @@ export function registerRoomHandlers(
         }
     });
 
-    socket.on("room:join", async ({ roomId, userId, password }, ack) => {
+    socket.on("room:join", async ({ roomId, password }, ack) => {
         try {
+            const userId = socket.data.userId;
+            if (!userId) return ack("Non authentifié");
             const success = await joinRoom(roomId, userId, password);
             if (!success) return ack("Mot de passe incorrect");
             const user = await getUser(userId);
             if (!user) return ack("Utilisateur introuvable");
-            socket.data.userId = userId;
             socket.data.roomId = roomId;
             socket.join(roomId);
             io.to(roomId).emit("room:user_joined", user);
@@ -48,8 +49,10 @@ export function registerRoomHandlers(
         }
     });
 
-    socket.on("room:leave", async ({ roomId, userId }, ack) => {
+    socket.on("room:leave", async ({ roomId }, ack) => {
         try {
+            const userId = socket.data.userId;
+            if (!userId) return ack("Non authentifié");
             socket.data.roomId = undefined;
             socket.leave(roomId);
             deleteSession(roomId);
@@ -72,20 +75,19 @@ export function registerRoomHandlers(
 
     socket.on("room:create", async (payload, ack) => {
         try {
-            const { name, password, ownerId } = payload;
+            const userId = socket.data.userId;
+            if (!userId) return ack("Non authentifié");
+
+            const { name, password } = payload;
 
             if (!name || name.trim() === "") {
                 return ack("Nom de salon invalide");
             }
 
-            if (!ownerId) {
-                return ack("OwnerId manquant");
-            }
-
             const createRoomPayload: CreateRoomPayload = {
                 name: name.trim(),
                 password: password ?? null,
-                ownerId,
+                ownerId: userId,
             };
 
             const room = await createRoom(createRoomPayload);
@@ -94,9 +96,8 @@ export function registerRoomHandlers(
                 return ack("Erreur serveur");
             }
 
-            await joinRoom(room.id, ownerId, password);
+            await joinRoom(room.id, userId, password ?? undefined);
 
-            socket.data.userId = ownerId;
             socket.data.roomId = room.id;
             socket.join(room.id);
             io.emit("room:created", room);
