@@ -1,4 +1,4 @@
-﻿package com.galaxy_party.backend.services;
+package com.galaxy_party.backend.services;
 
 import org.springframework.stereotype.Service;
 

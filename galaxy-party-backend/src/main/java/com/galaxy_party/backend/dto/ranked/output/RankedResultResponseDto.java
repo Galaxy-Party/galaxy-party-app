@@ -1,4 +1,4 @@
-﻿package com.galaxy_party.backend.dto.ranked.output;
+package com.galaxy_party.backend.dto.ranked.output;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

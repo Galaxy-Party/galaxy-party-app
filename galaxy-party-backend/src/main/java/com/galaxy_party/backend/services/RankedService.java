@@ -1,4 +1,4 @@
-﻿package com.galaxy_party.backend.services;
+package com.galaxy_party.backend.services;
 
 import com.galaxy_party.backend.dto.ranked.output.RankDefinitionDto;
 import com.galaxy_party.backend.dto.user.output.UserDto;

@@ -1,4 +1,4 @@
-﻿package com.galaxy_party.backend.entity;
+package com.galaxy_party.backend.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

@@ -1,4 +1,4 @@
-﻿package com.galaxy_party.backend.dto.ranked.input;
+package com.galaxy_party.backend.dto.ranked.input;
 
 import lombok.Data;
 

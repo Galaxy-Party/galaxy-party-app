@@ -1,4 +1,4 @@
-﻿package com.galaxy_party.backend.controller;
+package com.galaxy_party.backend.controller;
 
 import com.galaxy_party.backend.dto.ranked.input.RankedResultDto;
 import com.galaxy_party.backend.dto.ranked.output.RankDefinitionDto;

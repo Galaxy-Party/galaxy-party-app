@@ -1,4 +1,4 @@
-﻿package com.galaxy_party.backend.repository;
+package com.galaxy_party.backend.repository;
 
 import com.galaxy_party.backend.entity.RankEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
