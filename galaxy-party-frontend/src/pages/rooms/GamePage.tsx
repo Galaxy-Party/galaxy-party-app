@@ -5,6 +5,7 @@ import { useSocket } from '../../hooks/useSocket'
 import socket from '../../socket/client'
 import type { Room } from '../../types/room/models'
 import Starfield from '../../components/Starfield'
+import { useToast } from '../../hooks/useToast'
 
 const INDIGO = '#818cf8'
 const ROSE = '#f472b6'
@@ -32,6 +33,7 @@ export default function GamePage() {
   const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
   const { user } = useUserContext()
+  const toast = useToast()
 
   const [room, setRoom] = useState<Room | null>(null)
   const [countdown, setCountdown] = useState<number | null>(null)
@@ -52,9 +54,9 @@ export default function GamePage() {
 
   useEffect(() => {
     if (!id || !user) return
-    socket.emit('room:get', id, (err) => { if (err) console.error(err) })
-    socket.emit('game:player_ready', { roomId: id }, (err) => { if (err) console.error(err) })
-  }, [id, user])
+    socket.emit('room:get', id, (err) => { if (err) toast.error(err) })
+    socket.emit('game:player_ready', { roomId: id }, (err) => { if (err) toast.error(err) })
+  }, [id, user, toast])
 
   useEffect(() => {
     if (!currentPlayerId || answerResult !== null || !id || !user) return
@@ -109,8 +111,8 @@ export default function GamePage() {
 
   const submitAnswer = useCallback(() => {
     if (currentPlayerId !== user?.id || !answer.trim() || !id || !user) return
-    socket.emit('game:answer', { roomId: id, answer }, (err) => { if (err) console.error(err) })
-  }, [currentPlayerId, user, answer, id])
+    socket.emit('game:answer', { roomId: id, answer }, (err) => { if (err) toast.error(err) })
+  }, [currentPlayerId, user, answer, id, toast])
 
   const activeRing: React.CSSProperties = {
     boxShadow: `0 0 0 3px ${INDIGO}, 0 0 24px rgba(129,140,248,0.5)`,

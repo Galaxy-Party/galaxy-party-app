@@ -1,4 +1,5 @@
 import socket from '../socket/client'
+import { useToast } from '../hooks/useToast'
 
 interface Invite {
   inviteId: string
@@ -14,8 +15,11 @@ interface Props {
 }
 
 export default function GameInviteNotif({ invite, onAccept, onDecline }: Props) {
+  const toast = useToast()
+
   const accept = () => {
-    socket.emit('friend:invite_accept', invite.inviteId, (_, roomId) => {
+    socket.emit('friend:invite_accept', invite.inviteId, (err, roomId) => {
+      if (err) { toast.error(err); return }
       if (roomId) onAccept(roomId)
     })
   }

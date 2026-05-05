@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import socket from '../../socket/client'
+import { useToast } from '../../hooks/useToast'
 import type { ActiveChat, ChatMessage } from './types'
 import FriendAvatar from './FriendAvatar'
 
@@ -13,6 +14,7 @@ interface Props {
 export default function FriendChat({ chat, myImageName, onClose, onMessageSent }: Props) {
   const [msg, setMsg] = useState('')
   const endRef = useRef<HTMLDivElement>(null)
+  const toast = useToast()
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -20,10 +22,12 @@ export default function FriendChat({ chat, myImageName, onClose, onMessageSent }
 
   const send = () => {
     if (!msg.trim()) return
-    socket.emit('message:send', { toUserId: chat.userId, content: msg.trim() }, (_, m) => {
+    const content = msg.trim()
+    setMsg('')
+    socket.emit('message:send', { toUserId: chat.userId, content }, (err, m) => {
+      if (err) { toast.error(err); return }
       if (m) onMessageSent(m)
     })
-    setMsg('')
   }
 
   return (

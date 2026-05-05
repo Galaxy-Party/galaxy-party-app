@@ -5,6 +5,7 @@ import { useUserContext } from '../hooks/useUserContext'
 import { useSocket } from '../hooks/useSocket'
 import socket from '../socket/client'
 import type { Room } from '../types/room/models'
+import { useToast } from '../hooks/useToast'
 
 const EMERALD = '#34d399'
 const AMBER = '#fbbf24'
@@ -17,6 +18,7 @@ type Tab = 'available' | 'inProgress'
 export default function RoomListPage() {
   const navigate = useNavigate()
   const { user } = useUserContext()
+  const toast = useToast()
   const [rooms, setRooms] = useState<Room[]>([])
   const [search, setSearch] = useState('')
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null)
@@ -34,8 +36,8 @@ export default function RoomListPage() {
   )
 
   useEffect(() => {
-    socket.emit('room:get_all', (err) => { if (err) console.error(err) })
-  }, [])
+    socket.emit('room:get_all', (err) => { if (err) toast.error(err) })
+  }, [toast])
 
   const handleRoomList = useCallback((roomList: Room[]) => setRooms(roomList), [])
   const handleRoomCreated = useCallback((room: Room) => setRooms(prev => [...prev, room]), [])
@@ -49,7 +51,7 @@ export default function RoomListPage() {
   const handleJoin = (password: string) => {
     if (!selectedRoom || !user) return
     socket.emit('room:join', { roomId: selectedRoom.id, password }, (err) => {
-      if (err) return console.error(err)
+      if (err) { toast.error(err); return }
       navigate('/rooms/' + selectedRoom.id)
       closeModal()
     })
