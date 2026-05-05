@@ -56,8 +56,12 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         return u
     }, [])
 
+    const updateElo = useCallback((newElo: number) => {
+        setUser(prev => prev ? { ...prev, elo: newElo } : null)
+    }, [])
+
     return (
-        <UserContext.Provider value={{ user, isLoading, register, login, logout, updateProfile }}>
+        <UserContext.Provider value={{ user, isLoading, register, login, logout, updateProfile, updateElo }}>
             {children}
         </UserContext.Provider>
     )

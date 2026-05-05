@@ -9,6 +9,7 @@ export type UserContextType = {
     login: (payload: LoginPayload, imageName?: string) => Promise<User>
     logout: () => Promise<void>
     updateProfile: (payload: UpdateProfilePayload) => Promise<User>
+    updateElo: (newElo: number) => void
 }
 
 export const UserContext = createContext<UserContextType | undefined>(undefined)
