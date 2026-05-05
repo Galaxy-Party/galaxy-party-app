@@ -30,6 +30,7 @@ function emitQuestion(io: TypedServer, session: GameSession): void {
     }
     const question = session.questions[session.currentQuestionIndex];
     session.turnStartedAt = Date.now();
+
     io.to(session.roomId).emit('game:question', {
         question: { id: question.id, label: question.label },
         currentPlayerId: session.currentPlayerId,

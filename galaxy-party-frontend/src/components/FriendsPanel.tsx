@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import socket from '../socket/client'
 import { useSocket } from '../hooks/useSocket'
 import { useUserContext } from '../hooks/useUserContext'
+import { useToast } from '../hooks/useToast'
 import type { FriendItem, FriendRequest } from '../types/sockets'
 import type { ActiveChat } from './friends/types'
 import FriendRow from './friends/FriendRow'
@@ -15,6 +16,7 @@ interface Props {
 
 export default function FriendsPanel({ open, onClose }: Props) {
   const { user } = useUserContext()
+  const toast = useToast()
   const [tab, setTab]         = useState<'friends' | 'requests'>('friends')
   const [addVal, setAddVal]   = useState('')
   const [friends, setFriends] = useState<FriendItem[]>([])
@@ -48,18 +50,22 @@ export default function FriendsPanel({ open, onClose }: Props) {
 
   const sendRequest = () => {
     if (!addVal.trim()) return
-    socket.emit('friend:request', addVal.trim(), () => {})
-    setAddVal('')
+    socket.emit('friend:request', addVal.trim(), (err?: string) => {
+      if (err) { toast.error(err); return }
+      setAddVal('')
+    })
   }
 
   const acceptRequest = (friendshipId: string) => {
-    socket.emit('friend:accept', friendshipId, () => {
+    socket.emit('friend:accept', friendshipId, (err?: string) => {
+      if (err) { toast.error(err); return }
       setRequests(prev => prev.filter(r => r.friendshipId !== friendshipId))
     })
   }
 
   const declineRequest = (friendshipId: string) => {
-    socket.emit('friend:decline', friendshipId, () => {
+    socket.emit('friend:decline', friendshipId, (err?: string) => {
+      if (err) { toast.error(err); return }
       setRequests(prev => prev.filter(r => r.friendshipId !== friendshipId))
     })
   }

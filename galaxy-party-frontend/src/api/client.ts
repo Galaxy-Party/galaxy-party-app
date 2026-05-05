@@ -57,8 +57,13 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
 
   if (!response.ok) {
     let body: unknown
-    try { body = await response.json() } catch { /* ignore */ }
-    throw new ApiError(response.status, response.statusText, body)
+    let message = response.statusText
+    try {
+      body = await response.json()
+      const bodyMsg = (body as Record<string, unknown>)?.message
+      if (typeof bodyMsg === 'string' && bodyMsg) message = bodyMsg
+    } catch { /* ignore */ }
+    throw new ApiError(response.status, message, body)
   }
 
   if (response.status === 204) return undefined as T
