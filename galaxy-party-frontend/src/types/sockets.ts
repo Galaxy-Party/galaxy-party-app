@@ -52,6 +52,11 @@ export interface ServerToClientEvents {
     "friend:game_invite": (invite: { inviteId: string; fromUserId: string; fromUsername: string; fromImageName: string | null }) => void;
     "friend:invite_accepted": (roomId: string) => void;
     "message:received": (message: ChatMessage) => void;
+    "ranked:match_found": (data: { roomId: string; opponent: { userId: string; username: string; imageName: string | null; elo: number } }) => void;
+    "ranked:elo_updated": (newElo: number) => void;
+    "ranked:leaderboard": (data: { entries: { id: string; username: string; imageName: string | null; elo: number }[]; myElo: number }) => void;
+    "ranked:session_started": () => void;
+    "ranked:ranks": (ranks: { name: string; icon: string; color: string; minElo: number; maxElo: number | null; next: string | null }[]) => void;
 }
 
 export interface ClientToServerEvents {
@@ -88,4 +93,7 @@ export interface ClientToServerEvents {
     "friend:invite_decline": (inviteId: string, ack: (err?: string) => void) => void;
     "message:send": (payload: { toUserId: string; content: string }, ack: (err?: string, message?: ChatMessage) => void) => void;
     "message:get_history": (payload: { withUserId: string }, ack: (err?: string, messages?: ChatMessage[]) => void) => void;
+    "ranked:join_queue": (ack: (err?: string) => void) => void;
+    "ranked:leave_queue": (ack: (err?: string) => void) => void;
+    "ranked:get_leaderboard": (ack: (err?: string) => void) => void;
 }

@@ -31,6 +31,13 @@ const dockItems = [
     icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>,
   },
   {
+    path: '/ranked',
+    label: 'Classé',
+    sub: 'Mode ranked',
+    ranked: true,
+    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>,
+  },
+  {
     path: '/rules',
     label: 'Règles du jeu',
     sub: 'Comment jouer ?',
@@ -39,7 +46,7 @@ const dockItems = [
 ]
 
 export default function AppLayout() {
-  const { user, logout } = useUserContext()
+  const { user, logout, updateElo } = useUserContext()
   const navigate = useNavigate()
   const { pathname } = useLocation()
   const [friendsOpen, setFriendsOpen] = useState(false)
@@ -60,18 +67,21 @@ export default function AppLayout() {
       setGameInvite(null)
       navigate(`/rooms/${roomId}`)
     }
+    const onEloUpdated = (newElo: number) => updateElo(newElo)
 
     socket.on('friend:list', onList)
     socket.on('friend:requested', onRequested)
     socket.on('message:received', onMessage)
     socket.on('friend:game_invite', onInvite)
     socket.on('friend:invite_accepted', onInviteAccepted)
+    socket.on('ranked:elo_updated', onEloUpdated)
     return () => {
       socket.off('friend:list', onList)
       socket.off('friend:requested', onRequested)
       socket.off('message:received', onMessage)
       socket.off('friend:game_invite', onInvite)
       socket.off('friend:invite_accepted', onInviteAccepted)
+      socket.off('ranked:elo_updated', onEloUpdated)
     }
   }, [friendsOpen, navigate])
 
@@ -137,17 +147,23 @@ export default function AppLayout() {
 
             {dockItems.map(item => {
               const active = pathname === item.path
+              const isRanked = 'ranked' in item && item.ranked
+              const activeColor = isRanked ? '#fbbf24' : '#818cf8'
+              const activeBg = isRanked ? 'rgba(251,191,36,0.12)' : 'rgba(129,140,248,0.12)'
+              const activeShadow = isRanked ? '0 0 16px rgba(251,191,36,0.15)' : '0 0 16px rgba(129,140,248,0.12)'
+              const activeSubColor = isRanked ? 'rgba(251,191,36,0.5)' : 'rgba(129,140,248,0.5)'
               return (
                 <button
                   key={item.path}
                   onClick={() => navigate(item.path)}
-                  className={`flex flex-col items-center gap-[2px] py-[10px] px-4 flex-1 rounded-[14px] border transition-all duration-200 ${active ? 'border-[#818cf8] bg-[rgba(129,140,248,0.12)] shadow-[0_0_16px_rgba(129,140,248,0.12)]' : 'border-transparent bg-transparent'}`}
+                  className={`flex flex-col items-center gap-[2px] py-[10px] px-4 flex-1 rounded-[14px] border transition-all duration-200 ${active ? 'border-transparent' : 'border-transparent bg-transparent'}`}
+                  style={active ? { background: activeBg, borderColor: activeColor, boxShadow: activeShadow } : {}}
                 >
-                  <div className={active ? 'opacity-100 text-[#818cf8]' : 'opacity-70 text-[rgba(241,240,255,0.75)]'}>{item.icon}</div>
-                  <span className={`text-[12px] font-semibold uppercase tracking-[0.05em] text-center transition-colors duration-200 ${active ? 'text-[#818cf8]' : 'text-[rgba(241,240,255,0.75)]'}`}>
+                  <div style={{ opacity: active ? 1 : 0.7, color: active ? activeColor : 'rgba(241,240,255,0.75)' }}>{item.icon}</div>
+                  <span className="text-[12px] font-semibold uppercase tracking-[0.05em] text-center transition-colors duration-200" style={{ color: active ? activeColor : 'rgba(241,240,255,0.75)' }}>
                     {item.label}
                   </span>
-                  <span className={`text-[10px] text-center ${active ? 'text-[rgba(129,140,248,0.5)]' : 'text-[rgba(241,240,255,0.4)]'}`}>
+                  <span className="text-[10px] text-center transition-colors duration-200" style={{ color: active ? activeSubColor : 'rgba(241,240,255,0.4)' }}>
                     {item.sub}
                   </span>
                 </button>

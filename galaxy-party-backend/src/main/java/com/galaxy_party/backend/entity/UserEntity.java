@@ -47,6 +47,10 @@ public class UserEntity {
     @Column
     private String imageName;
 
+    @Column(nullable = false)
+    @Builder.Default
+    private int elo = 0;
+
     @ManyToOne
     @JoinColumn(name = "room_id", nullable = true)
     private RoomEntity room;
@@ -56,6 +60,7 @@ public class UserEntity {
                 .id(userEntity.getId())
                 .username(userEntity.getUsername())
                 .imageName(userEntity.getImageName())
+                .elo(userEntity.getElo())
                 .build();
     }
 }

@@ -17,28 +17,35 @@ import WaitingRoomPage from './pages/rooms/WaitingRoomPage.tsx'
 import GamePage from './pages/rooms/GamePage.tsx'
 import SpectatorPage from './pages/rooms/SpectatorPage.tsx'
 import AppLayout from './layouts/AppLayout.tsx'
+import RankedPage from './pages/RankedPage.tsx'
+import MatchmakingPage from './pages/MatchmakingPage.tsx'
+import RanksProvider from './context/RanksProvider.tsx'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
       <ToastProvider>
         <UserProvider>
-          <Routes>
-            <Route path="/login" element={<LoginPage />} />
-            <Route element={<ProtectedRoute />}>
-              <Route element={<AppLayout />}>
-                <Route path="/menu" element={<MenuPage />} />
-                <Route path="/rules" element={<RulesPage />} />
-                <Route path="/profile" element={<ProfilePage />} />
-                <Route path="/create-room" element={<RoomCreationPage />} />
-                <Route path="/rooms" element={<RoomListPage />} />
+          <RanksProvider>
+            <Routes>
+              <Route path="/login" element={<LoginPage />} />
+              <Route element={<ProtectedRoute />}>
+                <Route element={<AppLayout />}>
+                  <Route path="/menu" element={<MenuPage />} />
+                  <Route path="/rules" element={<RulesPage />} />
+                  <Route path="/profile" element={<ProfilePage />} />
+                  <Route path="/create-room" element={<RoomCreationPage />} />
+                  <Route path="/rooms" element={<RoomListPage />} />
+                  <Route path="/ranked" element={<RankedPage />} />
+                </Route>
+                <Route path="/ranked/matchmaking" element={<MatchmakingPage />} />
+                <Route path="/rooms/:id" element={<WaitingRoomPage />} />
+                <Route path="/rooms/:id/game" element={<GamePage />} />
+                <Route path="/rooms/:id/spectate" element={<SpectatorPage />} />
               </Route>
-              <Route path="/rooms/:id" element={<WaitingRoomPage />} />
-              <Route path="/rooms/:id/game" element={<GamePage />} />
-              <Route path="/rooms/:id/spectate" element={<SpectatorPage />} />
-            </Route>
-            <Route path="*" element={<CatchAllRedirect />} />
-          </Routes>
+              <Route path="*" element={<CatchAllRedirect />} />
+            </Routes>
+          </RanksProvider>
         </UserProvider>
         <Toaster />
       </ToastProvider>

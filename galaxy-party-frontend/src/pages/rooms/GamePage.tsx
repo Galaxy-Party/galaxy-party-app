@@ -32,7 +32,7 @@ function Nebulae() {
 export default function GamePage() {
   const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
-  const { user } = useUserContext()
+  const { user, updateElo } = useUserContext()
   const toast = useToast()
 
   const [room, setRoom] = useState<Room | null>(null)
@@ -43,6 +43,9 @@ export default function GamePage() {
   const [answerResult, setAnswerResult] = useState<{ correct: boolean; correctAnswer: string } | null>(null)
   const [playerTimes, setPlayerTimes] = useState<Record<string, number>>({})
   const [winnerId, setWinnerId] = useState<string | null>(null)
+  const [isRanked, setIsRanked] = useState(false)
+  const [eloChange, setEloChange] = useState<{ old: number; new: number } | null>(null)
+  const isRankedRef = useRef(false)
 
   const [turnBanner, setTurnBanner] = useState<{ text: string; isMine: boolean; key: number } | null>(null)
 
@@ -112,11 +115,23 @@ export default function GamePage() {
   }, [])
   const handleGameOver = useCallback(({ winnerId }: { winnerId: string }) => {
     setWinnerId(winnerId)
+    if (isRankedRef.current) {
+      setTimeout(() => navigate('/ranked'), 4000)
+    }
+  }, [navigate])
+  const handleSessionStarted = useCallback(() => {
+    isRankedRef.current = true
+    setIsRanked(true)
   }, [])
   const handlePlayerQuit = useCallback(() => {
-    navigate(`/rooms/${id}`)
+    navigate(isRankedRef.current ? '/ranked' : `/rooms/${id}`)
   }, [navigate, id])
+  const handleEloUpdated = useCallback((newElo: number) => {
+    setEloChange(prev => ({ old: prev?.new ?? (user?.elo ?? 0), new: newElo }))
+    updateElo(newElo)
+  }, [updateElo, user])
 
+  useSocket('ranked:session_started', handleSessionStarted)
   useSocket('room:details', handleRoomDetails)
   useSocket('game:countdown', handleCountdown)
   useSocket('game:started', handleGameStarted)
@@ -124,6 +139,7 @@ export default function GamePage() {
   useSocket('game:answer_result', handleAnswerResult)
   useSocket('game:over', handleGameOver)
   useSocket('game:player_quit', handlePlayerQuit)
+  useSocket('ranked:elo_updated', handleEloUpdated)
 
   const submitAnswer = useCallback(() => {
     if (currentPlayerId !== user?.id || !answer.trim() || !id || !user) return
@@ -174,11 +190,16 @@ export default function GamePage() {
                 ? `Bravo ${user?.username ?? ''}, tu as gagné !`
                 : `${room?.users.find(u => u.id === winnerId)?.username ?? "L'adversaire"} a gagné.`}
             </div>
+            {isRanked && eloChange && (
+              <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 15, fontWeight: 700, color: eloChange.new >= eloChange.old ? '#34d399' : '#f472b6' }}>
+                {eloChange.new >= eloChange.old ? '+' : ''}{eloChange.new - eloChange.old} ELO → {eloChange.new}
+              </div>
+            )}
             <button
-              onClick={() => navigate(`/rooms/${id}`)}
+              onClick={() => navigate(isRanked ? '/ranked' : `/rooms/${id}`)}
               style={{ marginTop: 12, padding: '0 40px', height: 52, borderRadius: 41, background: 'rgba(79,70,229,0.15)', border: `1px solid ${INDIGO}`, color: '#f1f0ff', fontFamily: "'Space Grotesk', sans-serif", fontSize: 15, fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}
             >
-              Retour au salon
+              {isRanked ? 'Retour au classé' : 'Retour au salon'}
             </button>
           </div>
         </div>
@@ -187,7 +208,7 @@ export default function GamePage() {
       {/* Quit button */}
       <div style={{ position: 'fixed', top: 24, left: 32, zIndex: 10 }}>
         <button
-          onClick={() => { socket.emit('game:quit', { roomId: id! }, () => {}); navigate(`/rooms/${id}`) }}
+          onClick={() => { socket.emit('game:quit', { roomId: id! }, () => {}); navigate(isRankedRef.current ? '/ranked' : `/rooms/${id}`) }}
           style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '0 20px', height: 44, borderRadius: 41, background: 'rgba(244,114,182,0.08)', border: `1px solid rgba(244,114,182,0.4)`, color: ROSE, fontFamily: "'Space Grotesk', sans-serif", fontSize: 14, fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
