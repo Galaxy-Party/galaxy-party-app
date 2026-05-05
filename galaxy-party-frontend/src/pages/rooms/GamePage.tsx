@@ -44,19 +44,35 @@ export default function GamePage() {
   const [playerTimes, setPlayerTimes] = useState<Record<string, number>>({})
   const [winnerId, setWinnerId] = useState<string | null>(null)
 
+  const [turnBanner, setTurnBanner] = useState<{ text: string; isMine: boolean; key: number } | null>(null)
+
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const turnBannerTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const opponent = room?.users.find(u => u.id !== user?.id) ?? null
+  const opponentName = opponent?.username ?? 'l\'adversaire'
   const isMyTurn = currentPlayerId === user?.id
   const myTime = user ? (playerTimes[user.id] ?? 0) : 0
   const opponentTime = opponent ? (playerTimes[opponent.id] ?? 0) : 0
+
 
   useEffect(() => {
     if (!id || !user) return
     socket.emit('room:get', id, (err) => { if (err) toast.error(err) })
     socket.emit('game:player_ready', { roomId: id }, (err) => { if (err) toast.error(err) })
   }, [id, user, toast])
+
+  useEffect(() => {
+    if (!currentPlayerId) return
+    const isMine = currentPlayerId === user?.id
+    const text = isMine ? 'À vous de jouer !' : `Tour de ${opponentName}`
+    if (turnBannerTimerRef.current) clearTimeout(turnBannerTimerRef.current)
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+    setTurnBanner({ text, isMine, key: Date.now() })
+    turnBannerTimerRef.current = setTimeout(() => setTurnBanner(null), 2000)
+    return () => { if (turnBannerTimerRef.current) clearTimeout(turnBannerTimerRef.current) }
+  }, [currentPlayerId, user?.id, opponentName])
 
   useEffect(() => {
     if (!currentPlayerId || answerResult !== null || !id || !user) return
@@ -114,20 +130,19 @@ export default function GamePage() {
     socket.emit('game:answer', { roomId: id, answer }, (err) => { if (err) toast.error(err) })
   }, [currentPlayerId, user, answer, id, toast])
 
-  const activeRing: React.CSSProperties = {
-    boxShadow: `0 0 0 3px ${INDIGO}, 0 0 24px rgba(129,140,248,0.5)`,
-    borderRadius: '50%',
-  }
-  const inactiveRing: React.CSSProperties = {
-    boxShadow: '0 0 0 2px rgba(78,128,152,0.4)',
-    borderRadius: '50%',
-    opacity: 0.5,
-  }
-
   return (
     <div style={{ position: 'relative', width: '100vw', height: '100vh', overflow: 'hidden', background: '#07050f', fontFamily: "'DM Sans', sans-serif", display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 28, padding: '20px 32px' }}>
       <Starfield />
       <Nebulae />
+
+      {/* Turn banner */}
+      {turnBanner && (
+        <div key={turnBanner.key} style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 15, pointerEvents: 'none', animation: 'turnBanner 2s ease forwards' }}>
+          <div style={{ padding: '14px 32px', borderRadius: 41, background: turnBanner.isMine ? 'rgba(129,140,248,0.12)' : 'rgba(244,114,182,0.10)', border: `1.5px solid ${turnBanner.isMine ? 'rgba(129,140,248,0.6)' : 'rgba(244,114,182,0.6)'}`, boxShadow: `0 0 32px ${turnBanner.isMine ? 'rgba(129,140,248,0.25)' : 'rgba(244,114,182,0.2)'}`, backdropFilter: 'blur(12px)', fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 20, letterSpacing: '0.02em', color: turnBanner.isMine ? INDIGO : ROSE, whiteSpace: 'nowrap' }}>
+            {turnBanner.text}
+          </div>
+        </div>
+      )}
 
       {/* Loading overlay */}
       {currentPlayerId === null && countdown === null && (
@@ -189,8 +204,14 @@ export default function GamePage() {
 
         {/* My avatar */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
-          <div style={isMyTurn ? activeRing : inactiveRing}>
-            <div style={{ width: 140, height: 140, borderRadius: '50%', background: NAVY, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ position: 'relative', width: 220, height: 220, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            {isMyTurn && (
+              <>
+                <div style={{ position: 'absolute', inset: 20, borderRadius: '50%', background: 'conic-gradient(from 0deg, rgba(129,140,248,0) 0deg, rgba(129,140,248,0.85) 60deg, rgba(244,114,182,0.7) 130deg, rgba(129,140,248,0) 220deg, rgba(129,140,248,0.85) 320deg, rgba(129,140,248,0) 360deg)', filter: 'blur(14px)', animation: 'haloRot 6s linear infinite, haloAuraBreath 2.4s ease-in-out infinite', zIndex: 1 }} />
+                <div style={{ position: 'absolute', inset: 32, borderRadius: '50%', background: 'conic-gradient(from 90deg, rgba(244,114,182,0) 0deg, rgba(244,114,182,0.55) 90deg, rgba(129,140,248,0.65) 200deg, rgba(244,114,182,0) 360deg)', filter: 'blur(10px)', animation: 'haloRotR 9s linear infinite', zIndex: 1 }} />
+              </>
+            )}
+            <div style={{ position: 'relative', zIndex: 2, width: 140, height: 140, borderRadius: '50%', background: NAVY, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', border: isMyTurn ? `2px solid ${INDIGO}` : '2px solid rgba(78,128,152,0.4)', opacity: isMyTurn ? 1 : 0.55, transition: 'opacity 0.3s, border-color 0.3s' }}>
               {user?.imageName ? (
                 <img src={user.imageName} alt="avatar" style={{ width: '72%', height: '72%', objectFit: 'contain' }} />
               ) : (
@@ -222,8 +243,14 @@ export default function GamePage() {
 
         {/* Opponent avatar */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
-          <div style={!isMyTurn ? activeRing : inactiveRing}>
-            <div style={{ width: 140, height: 140, borderRadius: '50%', background: NAVY, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ position: 'relative', width: 220, height: 220, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            {!isMyTurn && (
+              <>
+                <div style={{ position: 'absolute', inset: 20, borderRadius: '50%', background: 'conic-gradient(from 0deg, rgba(129,140,248,0) 0deg, rgba(129,140,248,0.85) 60deg, rgba(244,114,182,0.7) 130deg, rgba(129,140,248,0) 220deg, rgba(129,140,248,0.85) 320deg, rgba(129,140,248,0) 360deg)', filter: 'blur(14px)', animation: 'haloRot 6s linear infinite, haloAuraBreath 2.4s ease-in-out infinite', zIndex: 1 }} />
+                <div style={{ position: 'absolute', inset: 32, borderRadius: '50%', background: 'conic-gradient(from 90deg, rgba(244,114,182,0) 0deg, rgba(244,114,182,0.55) 90deg, rgba(129,140,248,0.65) 200deg, rgba(244,114,182,0) 360deg)', filter: 'blur(10px)', animation: 'haloRotR 9s linear infinite', zIndex: 1 }} />
+              </>
+            )}
+            <div style={{ position: 'relative', zIndex: 2, width: 140, height: 140, borderRadius: '50%', background: NAVY, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', border: !isMyTurn ? `2px solid ${INDIGO}` : '2px solid rgba(78,128,152,0.4)', opacity: !isMyTurn ? 1 : 0.55, transition: 'opacity 0.3s, border-color 0.3s' }}>
               {opponent ? (
                 <img src={opponent.imageName ?? undefined} alt="avatar" style={{ width: '72%', height: '72%', objectFit: 'contain' }} />
               ) : (
