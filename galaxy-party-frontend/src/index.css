@@ -33,6 +33,28 @@
   to { opacity: 0; transform: translateX(20px) scale(0.95); }
 }
 
+@keyframes haloRot {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes haloRotR {
+  from { transform: rotate(360deg); }
+  to { transform: rotate(0deg); }
+}
+
+@keyframes haloAuraBreath {
+  0%, 100% { opacity: .55; }
+  50% { opacity: .9; }
+}
+
+@keyframes turnBanner {
+  0%   { opacity: 0; scale: 0.82; }
+  12%  { opacity: 1; scale: 1; }
+  72%  { opacity: 1; scale: 1; }
+  100% { opacity: 0; scale: 0.95; }
+}
+
 html, body {
   width: 100%;
   height: 100%;
