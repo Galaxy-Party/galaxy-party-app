@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom'
 import socket from '../../socket/client'
 import type { FriendItem } from '../../types/sockets'
 import FriendAvatar from './FriendAvatar'
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export default function FriendRow({ friend: f, hasUnread, onOpenChat }: Props) {
+  const navigate = useNavigate()
   const isOffline = f.status === 'offline'
 
   return (
@@ -20,14 +22,14 @@ export default function FriendRow({ friend: f, hasUnread, onOpenChat }: Props) {
       </div>
 
       <div className="flex-1 min-w-0">
-        <div className="font-display text-sm font-semibold text-[#f1f0ff]">{f.username}</div>
+        <div className="font-display text-sm font-semibold text-[#f1f0ff] truncate">{f.username}</div>
         <div className={`text-xs mt-[1px] ${isOffline ? 'text-[rgba(241,240,255,0.35)]' : STATUS_TEXT[f.status]}`}>
           {STATUS_LABEL[f.status]}
         </div>
       </div>
 
       {!isOffline && (
-        <div className="flex gap-1">
+        <div className="flex gap-1 shrink-0">
           {f.status === 'online' && (
             <button
               onClick={() => socket.emit('friend:invite', f.id, () => {})}
@@ -39,6 +41,31 @@ export default function FriendRow({ friend: f, hasUnread, onOpenChat }: Props) {
               </svg>
             </button>
           )}
+
+          {f.status === 'inroom' && (
+            <button
+              disabled
+              className="w-[30px] h-[30px] rounded-lg border border-[rgba(129,140,248,0.15)] bg-[rgba(129,140,248,0.04)] text-[rgba(241,240,255,0.2)] flex items-center justify-center cursor-not-allowed"
+              title="Dans un salon"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" width="14" height="14">
+                <polygon points="5 3 19 12 5 21 5 3"/>
+              </svg>
+            </button>
+          )}
+
+          {f.status === 'ingame' && f.roomId && (
+            <button
+              onClick={() => navigate(`/rooms/${f.roomId}/spectate`)}
+              className="w-[30px] h-[30px] rounded-lg border border-[rgba(245,158,11,0.4)] bg-[rgba(245,158,11,0.08)] text-[#f59e0b] flex items-center justify-center hover:bg-[rgba(245,158,11,0.2)] hover:border-[#f59e0b] transition-all duration-200"
+              title="Regarder la partie"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" width="14" height="14">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+              </svg>
+            </button>
+          )}
+
           <button
             onClick={() => onOpenChat(f)}
             className="relative w-[30px] h-[30px] rounded-lg border border-[rgba(129,140,248,0.4)] bg-[rgba(129,140,248,0.08)] text-[rgba(241,240,255,0.7)] flex items-center justify-center hover:bg-[rgba(129,140,248,0.2)] hover:text-[#818cf8] hover:border-[#818cf8] transition-all duration-200"
@@ -52,12 +79,6 @@ export default function FriendRow({ friend: f, hasUnread, onOpenChat }: Props) {
             )}
           </button>
         </div>
-      )}
-
-      {f.status === 'ingame' && (
-        <span className="text-[9px] font-bold bg-[rgba(245,158,11,0.15)] text-[#f59e0b] border border-[rgba(245,158,11,0.3)] rounded-[20px] px-2 py-[2px] whitespace-nowrap">
-          En jeu
-        </span>
       )}
     </div>
   )

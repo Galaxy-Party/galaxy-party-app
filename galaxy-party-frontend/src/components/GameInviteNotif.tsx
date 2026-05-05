@@ -36,8 +36,8 @@ export default function GameInviteNotif({ invite, onAccept, onDecline }: Props) 
               </svg>
           }
         </div>
-        <div>
-          <div className="font-display font-semibold text-sm text-[#f1f0ff]">{invite.fromUsername}</div>
+        <div className="flex-1 min-w-0">
+          <div className="font-display font-semibold text-sm text-[#f1f0ff] truncate">{invite.fromUsername}</div>
           <div className="text-xs text-[rgba(241,240,255,0.5)] mt-[2px]">vous invite à jouer</div>
         </div>
         <div className="ml-auto">

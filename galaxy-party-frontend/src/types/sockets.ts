@@ -2,7 +2,7 @@ import type {Hello} from "./models.ts";
 import type {User} from "./user/models.ts";
 import type {CreateRoomPayload, Room} from "./room/models.ts";
 
-export type FriendStatus = 'online' | 'ingame' | 'offline';
+export type FriendStatus = 'online' | 'inroom' | 'ingame' | 'offline';
 
 export interface FriendItem {
     friendshipId: string;
@@ -10,6 +10,7 @@ export interface FriendItem {
     username: string;
     imageName: string | null;
     status: FriendStatus;
+    roomId?: string;
 }
 
 export interface FriendRequest {
@@ -46,7 +47,7 @@ export interface ServerToClientEvents {
     "room:owner_changed": (newOwnerId: string) => void;
     "game:spectator_state": (data: { question: { id: string; label: string } | null; currentPlayerId: string; playerTimes: Record<string, number> }) => void;
     "friend:list": (data: { friends: FriendItem[]; requests: FriendRequest[] }) => void;
-    "friend:status": (userId: string, status: FriendStatus) => void;
+    "friend:status": (userId: string, status: FriendStatus, roomId?: string) => void;
     "friend:requested": (request: FriendRequest) => void;
     "friend:game_invite": (invite: { inviteId: string; fromUserId: string; fromUsername: string; fromImageName: string | null }) => void;
     "friend:invite_accepted": (roomId: string) => void;
