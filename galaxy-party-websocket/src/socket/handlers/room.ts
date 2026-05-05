@@ -2,7 +2,7 @@ import {TypedServer, TypedSocket} from "../../types/types.js";
 import {CreateRoomPayload, Room} from "../../types/room/models.js";
 import {createRoom, deleteRoom, getRoomById, getRooms, joinRoom, leaveRoom, updateRoom} from "../../services/room.service.js";
 import {getUser} from "../../services/user.service.js";
-import {deleteSession, getPlayerTimes, getSession} from "../../store/game.store.js";
+import {deleteSession, getSession} from "../../store/game.store.js";
 import {addSpectator, removeSpectator} from "../../store/spectator.store.js";
 import {broadcastStatus} from "./friend.js";
 
@@ -26,9 +26,15 @@ export function registerRoomHandlers(
 
     socket.on("room:get", async (roomId, ack) => {
         try {
+            const userId = socket.data.userId;
             const room = await getRoomById(roomId);
             if (!room) return ack("Salon introuvable");
             socket.join(roomId);
+            const isInRoom = userId && room.users.some((u: { id: string }) => u.id === userId);
+            if (isInRoom && socket.data.roomId !== roomId) {
+                socket.data.roomId = roomId;
+                await broadcastStatus(io, userId!, 'inroom');
+            }
             socket.emit("room:details", { ...room, isInProgress: !!getSession(roomId) });
             ack();
         } catch (e) {
@@ -49,7 +55,7 @@ export function registerRoomHandlers(
             io.to(roomId).emit("room:user_joined", user);
             const rooms = await getRooms();
             io.emit("room:list", withStatus(rooms));
-            await broadcastStatus(io, userId, 'ingame');
+            await broadcastStatus(io, userId, 'inroom');
             ack();
         } catch (e) {
             ack("Erreur serveur");
@@ -109,6 +115,7 @@ export function registerRoomHandlers(
             socket.data.roomId = room.id;
             socket.join(room.id);
             io.emit("room:created", room);
+            await broadcastStatus(io, userId, 'inroom');
             ack();
         } catch (e) {
             ack("Erreur serveur");

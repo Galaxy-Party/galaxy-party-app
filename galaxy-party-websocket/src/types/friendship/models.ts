@@ -7,7 +7,7 @@ export interface Friendship {
     addressee: User;
 }
 
-export type FriendStatus = 'online' | 'ingame' | 'offline';
+export type FriendStatus = 'online' | 'inroom' | 'ingame' | 'offline';
 
 export interface FriendItem {
     friendshipId: string;
@@ -15,6 +15,7 @@ export interface FriendItem {
     username: string;
     imageName: string | null;
     status: FriendStatus;
+    roomId?: string;
 }
 
 export interface FriendRequest {

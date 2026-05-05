@@ -78,6 +78,9 @@ export default function AppLayout() {
   return (
     <div className="relative w-screen h-screen overflow-hidden bg-[#07050f]">
       <FriendsPanel open={friendsOpen} onClose={() => setFriendsOpen(false)} />
+      {friendsOpen && (
+        <div className="fixed inset-0 z-20" onClick={() => setFriendsOpen(false)} />
+      )}
       {gameInvite && (
         <GameInviteNotif
           invite={gameInvite}

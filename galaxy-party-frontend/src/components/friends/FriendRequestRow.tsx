@@ -12,7 +12,7 @@ export default function FriendRequestRow({ request: r, onAccept, onDecline }: Pr
     <div className="flex items-center gap-3 p-[10px] rounded-[14px]">
       <FriendAvatar imageName={r.imageName} size={42} />
       <div className="flex-1 min-w-0">
-        <div className="font-display text-sm font-semibold text-[#f1f0ff]">{r.username}</div>
+        <div className="font-display text-sm font-semibold text-[#f1f0ff] truncate">{r.username}</div>
         <div className="text-xs mt-[1px] text-[rgba(241,240,255,0.35)]">Veut vous ajouter</div>
       </div>
       <div className="flex gap-[6px]">

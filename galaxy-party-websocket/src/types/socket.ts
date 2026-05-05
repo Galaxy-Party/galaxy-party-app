@@ -22,7 +22,7 @@ export interface ServerToClientEvents {
     "room:owner_changed": (newOwnerId: string) => void;
     "game:spectator_state": (data: { question: { id: string; label: string } | null; currentPlayerId: string; playerTimes: Record<string, number> }) => void;
     "friend:list": (data: { friends: FriendItem[]; requests: FriendRequest[] }) => void;
-    "friend:status": (userId: string, status: FriendStatus) => void;
+    "friend:status": (userId: string, status: FriendStatus, roomId?: string) => void;
     "friend:requested": (request: FriendRequest) => void;
     "friend:game_invite": (invite: { inviteId: string; fromUserId: string; fromUsername: string; fromImageName: string | null }) => void;
     "friend:invite_accepted": (roomId: string) => void;

@@ -30,8 +30,8 @@ export default function FriendsPanel({ open, onClose }: Props) {
     setFriends(f); setRequests(r)
   })
 
-  useSocket('friend:status', (userId, status) => {
-    setFriends(prev => prev.map(f => f.id === userId ? { ...f, status } : f))
+  useSocket('friend:status', (userId, status, roomId) => {
+    setFriends(prev => prev.map(f => f.id === userId ? { ...f, status, roomId } : f))
   })
 
   useSocket('friend:requested', req => {
@@ -114,7 +114,7 @@ export default function FriendsPanel({ open, onClose }: Props) {
         {(['friends', 'requests'] as const).map(t => (
           <button key={t} onClick={() => setTab(t)}
             className={`flex-1 py-[7px] border-0 bg-transparent text-[13px] font-medium border-b-2 transition-all duration-200 ${tab === t ? 'text-[#818cf8] border-b-[#818cf8]' : 'text-[rgba(241,240,255,0.35)] border-b-transparent'}`}>
-            {t === 'friends' ? `Amis (${online.length} en ligne)` : `Demandes${requests.length > 0 ? ` (${requests.length})` : ''}`}
+            {t === 'friends' ? `Amis (${online.length} actifs)` : `Demandes${requests.length > 0 ? ` (${requests.length})` : ''}`}
           </button>
         ))}
       </div>
@@ -124,7 +124,7 @@ export default function FriendsPanel({ open, onClose }: Props) {
           <>
             {online.length > 0 && (
               <>
-                <div className={`${sectionLabel} pt-[14px]`}>En ligne — {online.length}</div>
+                <div className={`${sectionLabel} pt-[14px]`}>Disponibles — {online.length}</div>
                 {online.map(f => <FriendRow key={f.id} friend={f} hasUnread={unreadFrom.has(f.id)} onOpenChat={openChat} />)}
               </>
             )}

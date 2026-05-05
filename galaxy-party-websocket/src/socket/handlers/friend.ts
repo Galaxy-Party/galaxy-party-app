@@ -10,13 +10,20 @@ import {
 import { saveMessage, getConversation } from '../../services/message.service.js';
 import { createRoom, joinRoom } from '../../services/room.service.js';
 import { getUser } from '../../services/user.service.js';
+import { getSession } from '../../store/game.store.js';
 
 const pendingInvites = new Map<string, { fromUserId: string; toUserId: string }>();
 
 function getFriendStatus(io: TypedServer, userId: string): FriendStatus {
     const s = [...io.sockets.sockets.values()].find(s => s.data.userId === userId);
     if (!s) return 'offline';
-    return s.data.roomId ? 'ingame' : 'online';
+    if (!s.data.roomId) return 'online';
+    return getSession(s.data.roomId) ? 'ingame' : 'inroom';
+}
+
+function getFriendRoomId(io: TypedServer, userId: string): string | undefined {
+    const s = [...io.sockets.sockets.values()].find(s => s.data.userId === userId);
+    return s?.data.roomId;
 }
 
 function getFriendSockets(io: TypedServer, friendIds: string[]) {
@@ -34,12 +41,14 @@ function buildLists(friendships: Friendship[], userId: string, io: TypedServer) 
         const friend = iAmRequester ? f.addressee : f.requester;
 
         if (f.status === 'ACCEPTED') {
+            const status = getFriendStatus(io, friend.id);
             friends.push({
                 friendshipId: f.id,
                 id: friend.id,
                 username: friend.username,
                 imageName: friend.imageName ?? null,
-                status: getFriendStatus(io, friend.id),
+                status,
+                roomId: (status === 'inroom' || status === 'ingame') ? getFriendRoomId(io, friend.id) : undefined,
             });
         } else if (f.status === 'PENDING' && !iAmRequester) {
             requests.push({
@@ -61,8 +70,9 @@ export async function broadcastStatus(io: TypedServer, userId: string, status: F
             .filter(f => f.status === 'ACCEPTED')
             .map(f => f.requester.id === userId ? f.addressee.id : f.requester.id);
 
+        const roomId = (status === 'inroom' || status === 'ingame') ? getFriendRoomId(io, userId) : undefined;
         getFriendSockets(io, friendIds).forEach(s => {
-            s.emit('friend:status', userId, status);
+            s.emit('friend:status', userId, status, roomId);
         });
     } catch (e) {
         console.error('broadcastStatus error:', e);
