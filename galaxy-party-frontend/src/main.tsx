@@ -20,6 +20,7 @@ import AppLayout from './layouts/AppLayout.tsx'
 import RankedPage from './pages/RankedPage.tsx'
 import MatchmakingPage from './pages/MatchmakingPage.tsx'
 import RanksProvider from './context/RanksProvider.tsx'
+import LevelsProvider from './context/LevelsProvider.tsx'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -27,6 +28,7 @@ createRoot(document.getElementById('root')!).render(
       <ToastProvider>
         <UserProvider>
           <RanksProvider>
+          <LevelsProvider>
             <Routes>
               <Route path="/login" element={<LoginPage />} />
               <Route element={<ProtectedRoute />}>
@@ -45,6 +47,7 @@ createRoot(document.getElementById('root')!).render(
               </Route>
               <Route path="*" element={<CatchAllRedirect />} />
             </Routes>
+          </LevelsProvider>
           </RanksProvider>
         </UserProvider>
         <Toaster />

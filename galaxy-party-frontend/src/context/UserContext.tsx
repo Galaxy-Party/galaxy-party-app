@@ -28,6 +28,14 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         if (!socket.connected) socket.connect()
     }, [user])
 
+    useEffect(() => {
+        const onXpUpdated = ({ xp, level }: { xp: number; level: number }) => {
+            setUser(prev => prev ? { ...prev, xp, level } : null)
+        }
+        socket.on('profile:xp_updated', onXpUpdated)
+        return () => { socket.off('profile:xp_updated', onXpUpdated) }
+    }, [])
+
     const register = useCallback(async (payload: RegisterPayload) => {
         const u = await authApi.register(payload)
         setUser(u)
@@ -60,8 +68,12 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         setUser(prev => prev ? { ...prev, elo: newElo } : null)
     }, [])
 
+    const updateXp = useCallback((xp: number, level: number) => {
+        setUser(prev => prev ? { ...prev, xp, level } : null)
+    }, [])
+
     return (
-        <UserContext.Provider value={{ user, isLoading, register, login, logout, updateProfile, updateElo }}>
+        <UserContext.Provider value={{ user, isLoading, register, login, logout, updateProfile, updateElo, updateXp }}>
             {children}
         </UserContext.Provider>
     )

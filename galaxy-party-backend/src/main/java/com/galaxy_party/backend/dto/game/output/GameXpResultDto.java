@@ -1,13 +1,11 @@
-package com.galaxy_party.backend.dto.ranked.output;
+package com.galaxy_party.backend.dto.game.output;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class RankedResultResponseDto {
-    private int winnerElo;
-    private int loserElo;
+public class GameXpResultDto {
     private int winnerXp;
     private int winnerLevel;
     private boolean winnerLeveledUp;

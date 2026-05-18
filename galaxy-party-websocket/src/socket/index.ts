@@ -5,6 +5,7 @@ import { registerGameHandlers } from "./handlers/game.js";
 import { registerFriendHandlers, broadcastStatus, sendFriendList } from "./handlers/friend.js";
 import { registerRankedHandlers } from "./handlers/ranked.js";
 import { getRankDefinitions } from "../services/ranked.service.js";
+import { getLevelDefinitions } from "../services/level.service.js";
 import { leaveRoom } from "../services/room.service.js";
 import { deleteSession } from "../store/game.store.js";
 import { dequeue } from "../store/queue.store.js";
@@ -27,6 +28,8 @@ export function initSocket(io: TypedServer) {
             await broadcastStatus(io, userId, 'online');
             const ranks = await getRankDefinitions().catch(() => []);
             if (ranks.length) socket.emit('ranked:ranks', ranks);
+            const levels = await getLevelDefinitions().catch(() => []);
+            if (levels.length) socket.emit('levels:definitions', levels);
         }
 
         socket.on("disconnect", async () => {

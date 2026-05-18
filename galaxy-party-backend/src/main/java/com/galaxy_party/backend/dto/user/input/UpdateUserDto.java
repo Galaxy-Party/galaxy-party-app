@@ -12,4 +12,5 @@ import lombok.NoArgsConstructor;
 public class UpdateUserDto {
     private String username;
     private String imageName;
+    private String equippedTitle;
 }

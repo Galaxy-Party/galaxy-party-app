@@ -12,4 +12,9 @@ public class UserDto {
     private String username;
     private String imageName;
     private int elo;
+    private int wins;
+    private int gamesPlayed;
+    private int xp;
+    private int level;
+    private String equippedTitle;
 }
