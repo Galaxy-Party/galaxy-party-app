@@ -184,6 +184,7 @@ export function registerGameHandlers(io: TypedServer, socket: TypedSocket) {
             io.to(roomId).emit('game:answer_result', {
                 correct,
                 correctAnswer,
+                submittedAnswer: answer,
                 answeredBy: userId,
                 playerTimes: getPlayerTimes(session),
             });

@@ -9,7 +9,7 @@ export interface ServerToClientEvents {
     "game:countdown": (count: number) => void;
     "game:started": (data: { currentPlayerId: string }) => void;
     "game:question": (data: { question: { id: string; label: string }; currentPlayerId: string; playerTimes: Record<string, number> }) => void;
-    "game:answer_result": (data: { correct: boolean; correctAnswer: string; answeredBy: string; playerTimes: Record<string, number> }) => void;
+    "game:answer_result": (data: { correct: boolean; correctAnswer: string; submittedAnswer: string; answeredBy: string; playerTimes: Record<string, number> }) => void;
     "game:over": (data: { winnerId: string }) => void;
     "game:player_quit": () => void;
     "hello:message": (hello: Hello) => void;
