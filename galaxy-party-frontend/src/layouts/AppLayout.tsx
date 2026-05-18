@@ -5,6 +5,7 @@ import { useLevels } from '../hooks/useLevels'
 import Starfield from '../components/Starfield'
 import FriendsPanel from '../components/FriendsPanel'
 import GameInviteNotif from '../components/GameInviteNotif'
+import RulesModal from '../components/RulesModal'
 import logo from '../assets/logo.png'
 import socket from '../socket/client'
 
@@ -38,12 +39,6 @@ const dockItems = [
     ranked: true,
     icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>,
   },
-  {
-    path: '/rules',
-    label: 'Règles du jeu',
-    sub: 'Comment jouer ?',
-    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg>,
-  },
 ]
 
 export default function AppLayout() {
@@ -52,6 +47,7 @@ export default function AppLayout() {
   const navigate = useNavigate()
   const { pathname } = useLocation()
   const [friendsOpen, setFriendsOpen] = useState(false)
+  const [rulesOpen, setRulesOpen] = useState(false)
   const [hasNotif, setHasNotif] = useState(false)
   const [gameInvite, setGameInvite] = useState<{ inviteId: string; fromUserId: string; fromUsername: string; fromImageName: string | null } | null>(null)
 
@@ -89,6 +85,7 @@ export default function AppLayout() {
 
   return (
     <div className="relative w-screen h-screen overflow-hidden bg-[#07050f]">
+      {rulesOpen && <RulesModal onClose={() => setRulesOpen(false)} />}
       <FriendsPanel open={friendsOpen} onClose={() => setFriendsOpen(false)} />
       {friendsOpen && (
         <div className="fixed inset-0 z-20" onClick={() => setFriendsOpen(false)} />
@@ -198,6 +195,19 @@ export default function AppLayout() {
                 </button>
               )
             })}
+
+            <button
+              onClick={() => setRulesOpen(true)}
+              className="flex flex-col items-center gap-[2px] py-[10px] px-4 flex-1 rounded-[14px] border border-transparent bg-transparent transition-all duration-200"
+            >
+              <div className="opacity-70 text-[rgba(241,240,255,0.75)]">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+                  <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/>
+                </svg>
+              </div>
+              <span className="text-[12px] font-semibold uppercase tracking-[0.05em] text-center text-[rgba(241,240,255,0.75)]">Règles</span>
+              <span className="text-[10px] text-center text-[rgba(241,240,255,0.4)]">Comment jouer ?</span>
+            </button>
 
             <div className="w-px bg-[rgba(129,140,248,0.3)] my-1 self-stretch shrink-0" />
 

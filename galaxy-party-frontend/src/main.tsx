@@ -5,7 +5,6 @@ import './index.css'
 import LoginPage from './pages/LoginPage.tsx'
 import ProfilePage from './pages/ProfilePage.tsx'
 import MenuPage from './pages/MenuPage.tsx'
-import RulesPage from './pages/RulesPage.tsx'
 import RoomCreationPage from './pages/RoomCreationPage.tsx'
 import RoomListPage from './pages/RoomListPage.tsx'
 import { UserProvider } from './context/UserContext.tsx'
@@ -34,7 +33,6 @@ createRoot(document.getElementById('root')!).render(
               <Route element={<ProtectedRoute />}>
                 <Route element={<AppLayout />}>
                   <Route path="/menu" element={<MenuPage />} />
-                  <Route path="/rules" element={<RulesPage />} />
                   <Route path="/profile" element={<ProfilePage />} />
                   <Route path="/create-room" element={<RoomCreationPage />} />
                   <Route path="/rooms" element={<RoomListPage />} />
