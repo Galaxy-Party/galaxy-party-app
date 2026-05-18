@@ -34,7 +34,6 @@ public class RankedController {
 
     @PostMapping("/result")
     public ResponseEntity<RankedResultResponseDto> submitResult(@RequestBody RankedResultDto dto) {
-        int[] newElos = rankedService.updateElo(dto.getWinnerId(), dto.getLoserId());
-        return ResponseEntity.ok(new RankedResultResponseDto(newElos[0], newElos[1]));
+        return ResponseEntity.ok(rankedService.updateElo(dto.getWinnerId(), dto.getLoserId()));
     }
 }

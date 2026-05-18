@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useUserContext } from '../hooks/useUserContext'
+import { useLevels } from '../hooks/useLevels'
 import Starfield from '../components/Starfield'
 import FriendsPanel from '../components/FriendsPanel'
 import GameInviteNotif from '../components/GameInviteNotif'
@@ -47,6 +48,7 @@ const dockItems = [
 
 export default function AppLayout() {
   const { user, logout, updateElo } = useUserContext()
+  const levels = useLevels()
   const navigate = useNavigate()
   const { pathname } = useLocation()
   const [friendsOpen, setFriendsOpen] = useState(false)
@@ -111,6 +113,30 @@ export default function AppLayout() {
 
           {user && (
             <div className="flex items-center gap-[10px]">
+              {/* XP bar */}
+              {(() => {
+                const xp = user.xp ?? 0
+                const level = user.level ?? 1
+                const nextLevel = levels.find(l => l.levelNumber === level + 1)
+                const curLevel = levels.find(l => l.levelNumber === level)
+                const progress = curLevel && nextLevel
+                  ? Math.min(100, Math.round(((xp - curLevel.xpRequired) / (nextLevel.xpRequired - curLevel.xpRequired)) * 100))
+                  : 100
+                return (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ width: 22, height: 22, borderRadius: '50%', background: 'linear-gradient(135deg,#4f46e5,#7c3aed)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Space Grotesk', sans-serif", fontSize: 10, fontWeight: 700, color: 'white', flexShrink: 0, boxShadow: '0 0 8px rgba(129,140,248,0.4)' }}>
+                      {level}
+                    </div>
+                    <div style={{ width: 72, height: 4, borderRadius: 2, background: 'rgba(129,140,248,0.15)', overflow: 'hidden', flexShrink: 0 }}>
+                      <div style={{ height: '100%', borderRadius: 2, background: 'linear-gradient(90deg,#818cf8,#f472b6)', width: `${progress}%`, transition: 'width 0.6s ease' }} />
+                    </div>
+                    <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: 'rgba(241,240,255,0.35)', whiteSpace: 'nowrap' }}>
+                      {nextLevel ? `${xp}/${nextLevel.xpRequired}` : `${xp} XP`}
+                    </span>
+                  </div>
+                )
+              })()}
+
               {/* Friends button */}
               <button
                 onClick={() => { setFriendsOpen(o => !o); setHasNotif(false) }}
@@ -125,13 +151,16 @@ export default function AppLayout() {
               </button>
 
               {/* Player tag */}
-              <div className="flex items-center gap-[9px] bg-[rgba(12,8,28,0.92)] backdrop-blur-[14px] border border-[rgba(129,140,248,0.45)] rounded-[30px] py-[7px] pr-4 pl-[10px]">
+              <button
+                onClick={() => navigate('/profile')}
+                className="flex items-center gap-[9px] bg-[rgba(12,8,28,0.92)] backdrop-blur-[14px] border border-[rgba(129,140,248,0.45)] rounded-[30px] py-[7px] pr-4 pl-[10px] cursor-pointer transition-all duration-200 hover:border-[#818cf8] hover:bg-[rgba(129,140,248,0.1)]"
+              >
                 <div className="w-7 h-7 rounded-full bg-[#051240] border border-[#818cf8] overflow-hidden flex items-center justify-center shrink-0">
                   <img src={user.imageName ?? undefined} alt="avatar" className="w-[80%] h-[80%] object-contain" />
                 </div>
                 <span className="font-display text-[13px] font-semibold text-[#f1f0ff]">{user.username}</span>
                 <div className="w-[7px] h-[7px] rounded-full bg-[#34d399] shadow-[0_0_6px_#34d399] shrink-0" />
-              </div>
+              </button>
             </div>
           )}
         </header>

@@ -6,6 +6,7 @@ import { GameSession } from '../../types/game/models.js';
 import { broadcastStatus } from './friend.js';
 import { unmarkRankedRoom } from '../../store/queue.store.js';
 import { submitRankedResult } from '../../services/ranked.service.js';
+import { submitCasualResult } from '../../services/level.service.js';
 
 async function broadcastRoomList(io: TypedServer): Promise<void> {
     try {
@@ -18,19 +19,38 @@ function normalize(str: string): string {
     return str.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\s+/g, '');
 }
 
-function emitEloUpdated(io: TypedServer, winnerId: string, loserId: string, winnerElo: number, loserElo: number): void {
+function emitRankedUpdates(io: TypedServer, winnerId: string, loserId: string, result: { winnerElo: number; loserElo: number; winnerXp: number; winnerLevel: number; winnerLeveledUp: boolean; loserXp: number; loserLevel: number; loserLeveledUp: boolean }): void {
     const sockets = [...io.sockets.sockets.values()];
     const winnerSocket = sockets.find(s => s.data.userId === winnerId);
     const loserSocket = sockets.find(s => s.data.userId === loserId);
-    if (winnerSocket) winnerSocket.emit('ranked:elo_updated', winnerElo);
-    if (loserSocket) loserSocket.emit('ranked:elo_updated', loserElo);
+    if (winnerSocket) {
+        winnerSocket.emit('ranked:elo_updated', result.winnerElo);
+        winnerSocket.emit('profile:xp_updated', { xp: result.winnerXp, level: result.winnerLevel, leveledUp: result.winnerLeveledUp });
+    }
+    if (loserSocket) {
+        loserSocket.emit('ranked:elo_updated', result.loserElo);
+        loserSocket.emit('profile:xp_updated', { xp: result.loserXp, level: result.loserLevel, leveledUp: result.loserLeveledUp });
+    }
+}
+
+async function handleCasualEnd(io: TypedServer, winnerId: string, loserId: string): Promise<void> {
+    try {
+        const result = await submitCasualResult(winnerId, loserId);
+        const sockets = [...io.sockets.sockets.values()];
+        const winnerSocket = sockets.find(s => s.data.userId === winnerId);
+        const loserSocket = sockets.find(s => s.data.userId === loserId);
+        if (winnerSocket) winnerSocket.emit('profile:xp_updated', { xp: result.winnerXp, level: result.winnerLevel, leveledUp: result.winnerLeveledUp });
+        if (loserSocket) loserSocket.emit('profile:xp_updated', { xp: result.loserXp, level: result.loserLevel, leveledUp: result.loserLeveledUp });
+    } catch (e) {
+        console.error('handleCasualEnd error:', e);
+    }
 }
 
 async function handleRankedEnd(io: TypedServer, roomId: string, winnerId: string, loserId: string): Promise<void> {
     try {
         unmarkRankedRoom(roomId);
         const result = await submitRankedResult(winnerId, loserId);
-        emitEloUpdated(io, winnerId, loserId, result.winnerElo, result.loserElo);
+        emitRankedUpdates(io, winnerId, loserId, result);
         await deleteRoom(roomId);
         io.emit('room:deleted', roomId);
     } catch (e) {
@@ -50,7 +70,7 @@ function emitQuestion(io: TypedServer, session: GameSession): void {
         io.to(roomId).emit('game:over', { winnerId });
         for (const playerId of playerIds) void broadcastStatus(io, playerId, 'online');
         if (ranked) void handleRankedEnd(io, roomId, winnerId, loserId);
-        else void broadcastRoomList(io);
+        else { void handleCasualEnd(io, winnerId, loserId); void broadcastRoomList(io); }
         return;
     }
     const question = session.questions[session.currentQuestionIndex];
@@ -193,6 +213,7 @@ export function registerGameHandlers(io: TypedServer, socket: TypedSocket) {
             if (ranked && userId && opponentId) {
                 await handleRankedEnd(io, roomId, opponentId, userId);
             } else {
+                if (userId && opponentId) void handleCasualEnd(io, opponentId, userId);
                 void broadcastRoomList(io);
             }
             ack();
@@ -219,7 +240,7 @@ export function registerGameHandlers(io: TypedServer, socket: TypedSocket) {
             io.to(roomId).emit('game:over', { winnerId });
             for (const playerId of players) void broadcastStatus(io, playerId, 'online');
             if (ranked) void handleRankedEnd(io, roomId, winnerId, userId);
-            else void broadcastRoomList(io);
+            else { void handleCasualEnd(io, winnerId, userId); void broadcastRoomList(io); }
             ack();
         } catch (e) {
             ack('Erreur serveur');

@@ -3,6 +3,12 @@
 interface RankedResultResponse {
     winnerElo: number;
     loserElo: number;
+    winnerXp: number;
+    winnerLevel: number;
+    winnerLeveledUp: boolean;
+    loserXp: number;
+    loserLevel: number;
+    loserLeveledUp: boolean;
 }
 
 export interface LeaderboardEntry {

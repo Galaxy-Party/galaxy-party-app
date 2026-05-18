@@ -57,6 +57,8 @@ export interface ServerToClientEvents {
     "ranked:leaderboard": (data: { entries: { id: string; username: string; imageName: string | null; elo: number }[]; myElo: number }) => void;
     "ranked:session_started": () => void;
     "ranked:ranks": (ranks: { name: string; icon: string; color: string; minElo: number; maxElo: number | null; next: string | null }[]) => void;
+    "levels:definitions": (levels: { levelNumber: number; xpRequired: number; title: string }[]) => void;
+    "profile:xp_updated": (data: { xp: number; level: number; leveledUp: boolean }) => void;
 }
 
 export interface ClientToServerEvents {
