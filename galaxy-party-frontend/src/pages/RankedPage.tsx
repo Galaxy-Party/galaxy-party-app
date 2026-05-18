@@ -20,6 +20,7 @@ export default function RankedPage() {
   const ranks = useRanks()
   const [leaderboard, setLeaderboard] = useState<{ id: string; username: string; imageName: string | null; elo: number }[]>([])
   const [showRanks, setShowRanks] = useState(false)
+  const [joining, setJoining] = useState(false)
 
   useEffect(() => {
     socket.emit('ranked:get_leaderboard', () => {})
@@ -189,15 +190,16 @@ export default function RankedPage() {
 
         <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
           <button
-            onClick={() => navigate('/ranked/matchmaking')}
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '0 32px', height: 52, borderRadius: 41, background: 'rgba(251,191,36,0.1)', border: `1px solid ${AMBER}`, color: AMBER, fontFamily: "'Space Grotesk', sans-serif", fontSize: 15, fontWeight: 600, letterSpacing: '0.02em', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 0 16px rgba(251,191,36,0.15)' }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(251,191,36,0.18)' }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(251,191,36,0.1)' }}
+            disabled={joining}
+            onClick={() => { setJoining(true); navigate('/ranked/matchmaking') }}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '0 32px', height: 52, borderRadius: 41, background: joining ? 'rgba(251,191,36,0.05)' : 'rgba(251,191,36,0.1)', border: `1px solid ${AMBER}`, color: AMBER, fontFamily: "'Space Grotesk', sans-serif", fontSize: 15, fontWeight: 600, letterSpacing: '0.02em', cursor: joining ? 'not-allowed' : 'pointer', transition: 'all 0.2s', boxShadow: '0 0 16px rgba(251,191,36,0.15)', opacity: joining ? 0.5 : 1 }}
+            onMouseEnter={e => { if (!joining) (e.currentTarget as HTMLElement).style.background = 'rgba(251,191,36,0.18)' }}
+            onMouseLeave={e => { if (!joining) (e.currentTarget as HTMLElement).style.background = 'rgba(251,191,36,0.1)' }}
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" width="16" height="16">
               <polygon points="5 3 19 12 5 21 5 3"/>
             </svg>
-            Jouer en Classé
+            {joining ? 'Connexion…' : 'Jouer en Classé'}
           </button>
         </div>
 

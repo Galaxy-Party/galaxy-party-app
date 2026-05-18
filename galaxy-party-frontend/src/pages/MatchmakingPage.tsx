@@ -143,7 +143,7 @@ export default function MatchmakingPage() {
       if (count <= 0) {
         clearInterval(cd)
         cancelledRef.current = true
-        setTimeout(() => navigate(`/rooms/${roomId}/game`), 300)
+        setTimeout(() => navigate(`/rooms/${roomId}/game`, { state: { isRanked: true } }), 300)
       }
     }, 1000)
     return () => clearInterval(cd)
