@@ -52,7 +52,7 @@ export default function AvatarPickerModal({ currentImageName, pendingAvatar, onS
                     </button>
                     <button
                         onClick={onClose}
-                        className="inline-flex items-center justify-center px-6 h-11 rounded-[41px] bg-transparent border border-[rgba(241,240,255,0.15)] text-[rgba(241,240,255,0.35)] text-[14px] cursor-pointer"
+                        className="inline-flex items-center justify-center px-6 h-11 rounded-[41px] bg-transparent border border-[rgba(241,240,255,0.35)] text-[rgba(241,240,255,0.6)] text-[14px] cursor-pointer"
                     >
                         Annuler
                     </button>

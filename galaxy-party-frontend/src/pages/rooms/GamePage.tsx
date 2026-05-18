@@ -2,16 +2,20 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import { useUserContext } from '../../hooks/useUserContext'
 import { useSocket } from '../../hooks/useSocket'
+import { useLevels } from '../../hooks/useLevels'
 import socket from '../../socket/client'
 import type { Room } from '../../types/room/models'
 import Starfield from '../../components/Starfield'
 import { useToast } from '../../hooks/useToast'
 
-const INDIGO = '#818cf8'
-const ROSE = '#f472b6'
-const BORDER = 'rgba(129,140,248,0.22)'
-const NAVY = '#051240'
+const INDIGO   = '#818cf8'
+const ROSE     = '#f472b6'
+const EMERALD  = '#34d399'
+const AMBER    = '#fbbf24'
+const BORDER   = 'rgba(129,140,248,0.22)'
+const NAVY     = '#051240'
 const TEXT_DIM = 'rgba(241,240,255,0.35)'
+const TEXT     = '#f1f0ff'
 
 function formatTime(ms: number): string {
   const totalSec = Math.max(0, Math.floor(ms / 1000))
@@ -34,6 +38,7 @@ export default function GamePage() {
   const { id } = useParams<{ id: string }>()
   const location = useLocation()
   const { user, updateElo } = useUserContext()
+  const levels = useLevels()
   const toast = useToast()
 
   const rankedFromState = location.state?.isRanked === true
@@ -48,6 +53,7 @@ export default function GamePage() {
   const [winnerId, setWinnerId] = useState<string | null>(null)
   const [isRanked, setIsRanked] = useState(rankedFromState)
   const [eloChange, setEloChange] = useState<{ old: number; new: number } | null>(null)
+  const [xpUpdate, setXpUpdate] = useState<{ newXp: number; newLevel: number; leveledUp: boolean } | null>(null)
   const isRankedRef = useRef(rankedFromState)
 
   const [turnBanner, setTurnBanner] = useState<{ text: string; isMine: boolean; key: number } | null>(null)
@@ -119,9 +125,13 @@ export default function GamePage() {
   const handleGameOver = useCallback(({ winnerId }: { winnerId: string }) => {
     setWinnerId(winnerId)
     if (isRankedRef.current) {
-      setTimeout(() => navigate('/ranked'), 4000)
+      setTimeout(() => navigate('/ranked'), 6000)
     }
   }, [navigate])
+
+  const handleXpUpdated = useCallback(({ xp, level, leveledUp }: { xp: number; level: number; leveledUp: boolean }) => {
+    setXpUpdate({ newXp: xp, newLevel: level, leveledUp })
+  }, [])
   const handleSessionStarted = useCallback(() => {
     isRankedRef.current = true
     setIsRanked(true)
@@ -143,6 +153,7 @@ export default function GamePage() {
   useSocket('game:over', handleGameOver)
   useSocket('game:player_quit', handlePlayerQuit)
   useSocket('ranked:elo_updated', handleEloUpdated)
+  useSocket('profile:xp_updated', handleXpUpdated)
 
   const submitAnswer = useCallback(() => {
     if (currentPlayerId !== user?.id || !answer.trim() || !id || !user) return
@@ -181,32 +192,101 @@ export default function GamePage() {
         </div>
       )}
 
-      {/* Game over overlay */}
-      {winnerId !== null && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 30, background: 'rgba(7,5,15,0.92)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div className="card-in" style={{ background: 'rgba(12,8,28,0.96)', border: `1px solid ${BORDER}`, borderRadius: 28, padding: '48px 64px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20, boxShadow: '0 32px 80px rgba(0,0,0,0.7)', textAlign: 'center' }}>
-            <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 52, color: winnerId === user?.id ? INDIGO : ROSE, textShadow: `0 0 32px ${winnerId === user?.id ? 'rgba(129,140,248,0.4)' : 'rgba(244,114,182,0.4)'}` }}>
-              {winnerId === user?.id ? 'Victoire !' : 'Défaite…'}
-            </div>
-            <div style={{ fontSize: 16, color: 'rgba(241,240,255,0.72)', fontFamily: "'DM Sans', sans-serif" }}>
-              {winnerId === user?.id
-                ? `Bravo ${user?.username ?? ''}, tu as gagné !`
-                : `${room?.users.find(u => u.id === winnerId)?.username ?? "L'adversaire"} a gagné.`}
-            </div>
-            {isRanked && eloChange && (
-              <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 15, fontWeight: 700, color: eloChange.new >= eloChange.old ? '#34d399' : '#f472b6' }}>
-                {eloChange.new >= eloChange.old ? '+' : ''}{eloChange.new - eloChange.old} ELO → {eloChange.new}
+      {winnerId !== null && (() => {
+        const isWin = winnerId === user?.id
+        const accentColor = isWin ? INDIGO : ROSE
+        const xpGained = isWin ? 30 : 10
+
+        const newXp = xpUpdate?.newXp ?? (user?.xp ?? 0)
+        const newLevel = xpUpdate?.newLevel ?? (user?.level ?? 1)
+        const curLvlDef = levels.find(l => l.levelNumber === newLevel)
+        const nextLvlDef = levels.find(l => l.levelNumber === newLevel + 1)
+        const lvlProgress = curLvlDef && nextLvlDef
+          ? Math.min(100, Math.round(((newXp - curLvlDef.xpRequired) / (nextLvlDef.xpRequired - curLvlDef.xpRequired)) * 100))
+          : 100
+
+        const newGames = (user?.gamesPlayed ?? 0) + 1
+        const newWins  = (user?.wins ?? 0) + (isWin ? 1 : 0)
+        const newLosses = newGames - newWins
+        const newRate  = Math.round((newWins / newGames) * 100)
+
+        return (
+          <div style={{ position: 'fixed', inset: 0, zIndex: 30, background: 'rgba(7,5,15,0.92)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div className="card-in" style={{ background: 'rgba(12,8,28,0.96)', border: `1px solid ${BORDER}`, borderRadius: 28, padding: '40px 56px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0, boxShadow: '0 32px 80px rgba(0,0,0,0.7)', textAlign: 'center', minWidth: 380 }}>
+
+              <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 52, color: accentColor, textShadow: `0 0 32px ${isWin ? 'rgba(129,140,248,0.4)' : 'rgba(244,114,182,0.4)'}`, marginBottom: 8 }}>
+                {isWin ? 'Victoire !' : 'Défaite…'}
               </div>
-            )}
-            <button
-              onClick={() => navigate(isRanked ? '/ranked' : `/rooms/${id}`)}
-              style={{ marginTop: 12, padding: '0 40px', height: 52, borderRadius: 41, background: 'rgba(79,70,229,0.15)', border: `1px solid ${INDIGO}`, color: '#f1f0ff', fontFamily: "'Space Grotesk', sans-serif", fontSize: 15, fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}
-            >
-              {isRanked ? 'Retour au classé' : 'Retour au salon'}
-            </button>
+              <div style={{ fontSize: 15, color: 'rgba(241,240,255,0.6)', fontFamily: "'DM Sans', sans-serif", marginBottom: 24 }}>
+                {isWin
+                  ? `Bravo ${user?.username ?? ''}, tu as gagné !`
+                  : `${room?.users.find(u => u.id === winnerId)?.username ?? "L'adversaire"} a gagné.`}
+              </div>
+
+              {isRanked && eloChange && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16, padding: '10px 20px', borderRadius: 14, background: eloChange.new >= eloChange.old ? 'rgba(52,211,153,0.08)' : 'rgba(244,114,182,0.08)', border: `1px solid ${eloChange.new >= eloChange.old ? 'rgba(52,211,153,0.3)' : 'rgba(244,114,182,0.3)'}` }}>
+                  <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 13, color: TEXT_DIM }}>ELO</span>
+                  <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 800, fontSize: 18, color: eloChange.new >= eloChange.old ? EMERALD : ROSE }}>
+                    {eloChange.new >= eloChange.old ? '+' : ''}{eloChange.new - eloChange.old}
+                  </span>
+                  <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 13, color: TEXT_DIM }}>→</span>
+                  <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 16, color: AMBER }}>{eloChange.new}</span>
+                </div>
+              )}
+
+              <div style={{ width: '100%', marginBottom: 20 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                  <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 12, color: TEXT_DIM, letterSpacing: '0.12em', textTransform: 'uppercase' }}>Expérience</span>
+                  <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 13, color: INDIGO }}>
+                    +{xpGained} XP
+                  </span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 11, color: TEXT_DIM, flexShrink: 0 }}>Niv. {newLevel}</span>
+                  <div style={{ flex: 1, height: 6, borderRadius: 3, background: 'rgba(129,140,248,0.15)', overflow: 'hidden' }}>
+                    <div style={{ height: '100%', borderRadius: 3, background: `linear-gradient(90deg,${INDIGO},${ROSE})`, width: `${lvlProgress}%`, transition: 'width 0.8s ease' }} />
+                  </div>
+                  <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: TEXT_DIM, flexShrink: 0 }}>
+                    {nextLvlDef ? `${newXp}/${nextLvlDef.xpRequired}` : 'MAX'}
+                  </span>
+                </div>
+                {xpUpdate?.leveledUp && (
+                  <div style={{ marginTop: 8, fontFamily: "'Space Grotesk', sans-serif", fontSize: 13, fontWeight: 700, color: AMBER }}>
+                    ⭐ Niveau {newLevel} atteint !
+                  </div>
+                )}
+              </div>
+
+              {!isRanked && (
+                <div style={{ width: '100%', marginBottom: 20 }}>
+                  <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: ROSE, marginBottom: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
+                    Statistiques <span style={{ flex: 1, height: 1, background: 'rgba(244,114,182,0.2)' }} />
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8 }}>
+                    {[
+                      { val: newWins,          label: 'Victoires', color: INDIGO },
+                      { val: newLosses,        label: 'Défaites',  color: ROSE   },
+                      { val: `${newRate}%`,    label: 'Win rate',  color: AMBER  },
+                    ].map(({ val, label, color }) => (
+                      <div key={label} style={{ background: 'rgba(12,8,28,0.5)', border: `1px solid ${BORDER}`, borderRadius: 12, padding: '10px 8px', textAlign: 'center' }}>
+                        <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 18, color }}>{val}</div>
+                        <div style={{ fontSize: 10, color: TEXT_DIM, marginTop: 3, letterSpacing: '0.08em', textTransform: 'uppercase' }}>{label}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <button
+                onClick={() => navigate(isRanked ? '/ranked' : `/rooms/${id}`)}
+                style={{ marginTop: 4, padding: '0 40px', height: 50, borderRadius: 41, background: `rgba(${isWin ? '79,70,229' : '244,114,182'},0.12)`, border: `1px solid ${accentColor}`, color: TEXT, fontFamily: "'Space Grotesk', sans-serif", fontSize: 15, fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}
+              >
+                {isRanked ? 'Retour au classé' : 'Retour au salon'}
+              </button>
+            </div>
           </div>
-        </div>
-      )}
+        )
+      })()}
 
       {/* Quit button */}
       <div style={{ position: 'fixed', top: 24, left: 32, zIndex: 10 }}>
