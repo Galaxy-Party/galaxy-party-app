@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import { useUserContext } from '../../hooks/useUserContext'
 import { useSocket } from '../../hooks/useSocket'
 import socket from '../../socket/client'
@@ -32,8 +32,11 @@ function Nebulae() {
 export default function GamePage() {
   const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
+  const location = useLocation()
   const { user, updateElo } = useUserContext()
   const toast = useToast()
+
+  const rankedFromState = location.state?.isRanked === true
 
   const [room, setRoom] = useState<Room | null>(null)
   const [countdown, setCountdown] = useState<number | null>(null)
@@ -43,9 +46,9 @@ export default function GamePage() {
   const [answerResult, setAnswerResult] = useState<{ correct: boolean; correctAnswer: string } | null>(null)
   const [playerTimes, setPlayerTimes] = useState<Record<string, number>>({})
   const [winnerId, setWinnerId] = useState<string | null>(null)
-  const [isRanked, setIsRanked] = useState(false)
+  const [isRanked, setIsRanked] = useState(rankedFromState)
   const [eloChange, setEloChange] = useState<{ old: number; new: number } | null>(null)
-  const isRankedRef = useRef(false)
+  const isRankedRef = useRef(rankedFromState)
 
   const [turnBanner, setTurnBanner] = useState<{ text: string; isMine: boolean; key: number } | null>(null)
 
@@ -208,7 +211,7 @@ export default function GamePage() {
       {/* Quit button */}
       <div style={{ position: 'fixed', top: 24, left: 32, zIndex: 10 }}>
         <button
-          onClick={() => { socket.emit('game:quit', { roomId: id! }, () => {}); navigate(isRankedRef.current ? '/ranked' : `/rooms/${id}`) }}
+          onClick={() => { socket.emit('game:quit', { roomId: id! }, () => { navigate(isRankedRef.current ? '/ranked' : `/rooms/${id}`) }) }}
           style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '0 20px', height: 44, borderRadius: 41, background: 'rgba(244,114,182,0.08)', border: `1px solid rgba(244,114,182,0.4)`, color: ROSE, fontFamily: "'Space Grotesk', sans-serif", fontSize: 14, fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

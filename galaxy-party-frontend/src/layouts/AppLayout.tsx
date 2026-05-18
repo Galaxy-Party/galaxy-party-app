@@ -83,7 +83,7 @@ export default function AppLayout() {
       socket.off('friend:invite_accepted', onInviteAccepted)
       socket.off('ranked:elo_updated', onEloUpdated)
     }
-  }, [friendsOpen, navigate])
+  }, [friendsOpen, navigate, updateElo])
 
   return (
     <div className="relative w-screen h-screen overflow-hidden bg-[#07050f]">

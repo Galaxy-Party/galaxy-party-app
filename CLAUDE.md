@@ -101,6 +101,9 @@ Standard layered architecture: `Controller → Service → Repository → JPA/Hi
 | GET | `/messages?between=&and=` | Conversation history |
 | POST | `/messages` | Save message |
 | GET | `/questions` | List questions |
+| POST | `/ranked/result` | Soumettre résultat ranked (`winnerId`, `loserId`) → retourne `{ winnerElo, loserElo }` |
+| GET | `/ranked/leaderboard` | Classement global |
+| GET | `/ranked/definitions` | Définitions des rangs (nom, couleur, seuils ELO) |
 
 **Auth**: Spring Security + JWT (HS256). `ServiceTokenFilter` → `JwtAuthFilter`. `/auth/**`, `/error`, and `OPTIONS` are public.
 
@@ -115,8 +118,10 @@ Standard layered architecture: `Controller → Service → Repository → JPA/Hi
 **Pages** (`src/pages/`):
 - `LoginPage` — unified auth page with tab switch (Connexion / Créer un compte). Previously two separate pages; `RegisterPage` was deleted.
 - `MenuPage`, `RulesPage`, `ProfilePage`, `RoomCreationPage`, `RoomListPage`
+- `RankedPage` — hub classé (leaderboard, bouton "Jouer en Classé")
+- `MatchmakingPage` — file d'attente classée avec countdown pré-match. Navigue vers GamePage avec `{ state: { isRanked: true } }` pour signaler une partie classée.
 - `rooms/WaitingRoomPage` — room lobby with settings (timer slider, public/private toggle)
-- `rooms/GamePage` — real-time quiz game
+- `rooms/GamePage` — real-time quiz game. Lit `location.state?.isRanked` pour initialiser le mode classé (ne pas dépendre de `ranked:session_started` qui arrive avant le montage du composant).
 
 **Components** (`src/components/`):
 - `FriendsPanel` — slide-in panel (340px from right). Split into sub-components:
@@ -139,7 +144,8 @@ Standard layered architecture: `Controller → Service → Repository → JPA/Hi
 
 **Handlers** (`src/socket/handlers/`):
 - `room.ts` — `room:create/get/get_all/join/leave/delete/update`. On join: broadcasts `ingame` status to friends. On leave: broadcasts `online` status.
-- `game.ts` — `game:start/player_ready/answer/time_up/quit`. Timer (ms) passed from client on `game:start`, stored in `GameSession`, used to initialize `timeRemaining` per player. `displayAnswer` used as `correctAnswer` in results (fallback to `answers[0]`).
+- `game.ts` — `game:start/player_ready/answer/time_up/quit`. Timer (ms) passed from client on `game:start`, stored in `GameSession`, used to initialize `timeRemaining` per player. `displayAnswer` used as `correctAnswer` in results (fallback to `answers[0]`). `game:quit` est **async** et **await handleRankedEnd** avant d'ack — le frontend navigue dans le callback de l'ack pour garantir que la room est supprimée avant toute nouvelle recherche.
+- `ranked.ts` — `ranked:join_queue/leave_queue/get_leaderboard`. `ranked:join_queue` est idempotent : appelle `dequeue(userId)` en premier (pas d'erreur si déjà en file). L'adversaire est dépilé **après** la création réussie de la room (pas avant) pour éviter qu'il reste bloqué en "Recherche…" si une étape intermédiaire échoue.
 - `friend.ts` — `friend:request/accept/decline`, `message:send/get_history`. Exports `broadcastStatus` and `sendFriendList` used by index and room handlers.
 - `hello.ts` — ping/pong
 
@@ -150,12 +156,14 @@ Standard layered architecture: `Controller → Service → Repository → JPA/Hi
 **Socket events** (Client → Server):
 - `room:create/get/get_all/join/leave/delete/update`
 - `game:start { roomId, timer }`, `game:player_ready`, `game:answer`, `game:time_up`, `game:quit`
+- `ranked:join_queue`, `ranked:leave_queue`, `ranked:get_leaderboard`
 - `friend:request(toUsername)`, `friend:accept(friendshipId)`, `friend:decline(friendshipId)`
 - `message:send { toUserId, content }`, `message:get_history { withUserId }`
 
 **Socket events** (Server → Client):
 - `room:list/details/created/deleted/user_joined/user_left/owner_changed`
 - `game:loading/countdown/started/question/answer_result/over/player_quit`
+- `ranked:match_found { roomId, opponent }`, `ranked:session_started`, `ranked:elo_updated(newElo)`, `ranked:leaderboard`, `ranked:ranks`
 - `friend:list { friends, requests }`, `friend:status(userId, status)`, `friend:requested(request)`
 - `message:received(message)`
 
@@ -178,6 +186,15 @@ Standard layered architecture: `Controller → Service → Repository → JPA/Hi
 6. Wrong answer / time up: same player keeps turn (2s delay)
 7. Game ends when no questions remain or a player's timer hits 0
 8. `displayAnswer` on Question is shown to both players on answer reveal
+
+### Ranked Flow
+1. `RankedPage` → bouton "Jouer en Classé" → `MatchmakingPage` (`/ranked/matchmaking`)
+2. `MatchmakingPage` émet `ranked:join_queue` — idempotent, safe à appeler plusieurs fois
+3. Quand un adversaire est trouvé : `ranked:match_found { roomId, opponent }` → countdown 3s → navigate vers `/rooms/:id/game` avec `{ state: { isRanked: true } }`
+4. `GamePage` lit `location.state.isRanked` pour initialiser le mode classé (pas de dépendance à `ranked:session_started`)
+5. En cas de quit : `game:quit` async côté serveur, navigate dans le callback de l'ack. Le joueur qui quitte perd l'elo via `handleRankedEnd` (winner = adversaire, loser = quitteur)
+6. Fin de partie : `game:over` → `ranked:elo_updated` → overlay victoire/défaite → redirect auto vers `/ranked` après 4s
+7. Timer ranked fixe : `RANKED_TIMER_MS = 150 000ms` (2min30) par joueur
 
 ### Friends & Messaging Flow
 1. User connects → WS sends `friend:list` (accepted friends with online/ingame/offline status + pending requests)

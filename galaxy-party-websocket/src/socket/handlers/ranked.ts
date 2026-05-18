@@ -1,5 +1,5 @@
 ﻿import { TypedServer, TypedSocket } from '../../types/types.js';
-import { enqueue, dequeue, findMatch, isInQueue, markRoomAsRanked } from '../../store/queue.store.js';
+import { enqueue, dequeue, findMatch, markRoomAsRanked } from '../../store/queue.store.js';
 import { getUser } from '../../services/user.service.js';
 import { createRoom, joinRoom } from '../../services/room.service.js';
 import { broadcastStatus } from './friend.js';
@@ -16,7 +16,7 @@ export function registerRankedHandlers(io: TypedServer, socket: TypedSocket) {
         try {
             const userId = socket.data.userId;
             if (!userId) return ack('Non authentifié');
-            if (isInQueue(userId)) return ack('Déjà en file d\'attente');
+            dequeue(userId);
 
             const user = await getUser(userId);
             if (!user) return ack('Utilisateur introuvable');
@@ -28,7 +28,7 @@ export function registerRankedHandlers(io: TypedServer, socket: TypedSocket) {
             if (!opponent) return ack();
 
             dequeue(userId);
-            dequeue(opponent.userId);
+            // Opponent stays in queue until the room is confirmed ready
 
             const opponentUser = await getUser(opponent.userId);
             if (!opponentUser) return ack('Erreur serveur');
@@ -39,6 +39,9 @@ export function registerRankedHandlers(io: TypedServer, socket: TypedSocket) {
                 password: null,
             });
             if (!room) return ack('Erreur lors de la création du salon');
+
+            // Room is ready — remove opponent from queue now
+            dequeue(opponent.userId);
 
             markRoomAsRanked(room.id);
 

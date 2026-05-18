@@ -180,7 +180,7 @@ export function registerGameHandlers(io: TypedServer, socket: TypedSocket) {
         }
     });
 
-    socket.on('game:quit', ({ roomId }, ack) => {
+    socket.on('game:quit', async ({ roomId }, ack) => {
         try {
             const userId = socket.data.userId;
             const session = getSession(roomId);
@@ -191,7 +191,7 @@ export function registerGameHandlers(io: TypedServer, socket: TypedSocket) {
             io.to(roomId).emit('game:player_quit');
             for (const playerId of playerIds) void broadcastStatus(io, playerId, 'online');
             if (ranked && userId && opponentId) {
-                void handleRankedEnd(io, roomId, opponentId, userId);
+                await handleRankedEnd(io, roomId, opponentId, userId);
             } else {
                 void broadcastRoomList(io);
             }
