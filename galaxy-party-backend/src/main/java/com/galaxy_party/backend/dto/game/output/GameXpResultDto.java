@@ -1,4 +1,4 @@
-﻿package com.galaxy_party.backend.dto.game.output;
+package com.galaxy_party.backend.dto.game.output;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

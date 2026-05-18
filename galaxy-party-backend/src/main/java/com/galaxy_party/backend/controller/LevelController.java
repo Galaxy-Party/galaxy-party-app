@@ -1,4 +1,4 @@
-﻿package com.galaxy_party.backend.controller;
+package com.galaxy_party.backend.controller;
 
 import com.galaxy_party.backend.dto.game.output.GameXpResultDto;
 import com.galaxy_party.backend.dto.level.output.LevelDto;

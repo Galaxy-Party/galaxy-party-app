@@ -1,4 +1,4 @@
-﻿package com.galaxy_party.backend.dto.level.output;
+package com.galaxy_party.backend.dto.level.output;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
