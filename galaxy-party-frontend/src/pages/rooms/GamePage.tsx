@@ -48,7 +48,7 @@ export default function GamePage() {
   const [currentPlayerId, setCurrentPlayerId] = useState<string | null>(null)
   const [question, setQuestion] = useState<{ id: string; label: string } | null>(null)
   const [answer, setAnswer] = useState('')
-  const [answerResult, setAnswerResult] = useState<{ correct: boolean; correctAnswer: string } | null>(null)
+  const [answerResult, setAnswerResult] = useState<{ correct: boolean; correctAnswer: string; submittedAnswer: string; answeredBy: string } | null>(null)
   const [playerTimes, setPlayerTimes] = useState<Record<string, number>>({})
   const [winnerId, setWinnerId] = useState<string | null>(null)
   const [isRanked, setIsRanked] = useState(rankedFromState)
@@ -118,8 +118,8 @@ export default function GamePage() {
     setAnswerResult(null)
     setTimeout(() => inputRef.current?.focus(), 50)
   }, [])
-  const handleAnswerResult = useCallback(({ correct, correctAnswer, playerTimes }: { correct: boolean; correctAnswer: string; answeredBy: string; playerTimes: Record<string, number> }) => {
-    setAnswerResult({ correct, correctAnswer })
+  const handleAnswerResult = useCallback(({ correct, correctAnswer, submittedAnswer, answeredBy, playerTimes }: { correct: boolean; correctAnswer: string; submittedAnswer: string; answeredBy: string; playerTimes: Record<string, number> }) => {
+    setAnswerResult({ correct, correctAnswer, submittedAnswer, answeredBy })
     setPlayerTimes(playerTimes)
   }, [])
   const handleGameOver = useCallback(({ winnerId }: { winnerId: string }) => {
@@ -385,8 +385,15 @@ export default function GamePage() {
       {/* Answer */}
       <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: 520, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20 }}>
         {answerResult && (
-          <div style={{ textAlign: 'center', fontSize: 15, fontWeight: 600, color: answerResult.correct ? '#34d399' : ROSE }}>
-            {answerResult.correct ? `Bonne réponse : ${answerResult.correctAnswer}` : `Mauvaise réponse — La bonne réponse était : ${answerResult.correctAnswer}`}
+          <div style={{ textAlign: 'center', fontSize: 15, fontWeight: 600, display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <span style={{ color: answerResult.correct ? '#34d399' : ROSE }}>
+              {answerResult.answeredBy === user?.id ? 'Ta réponse' : 'Réponse adverse'} : « {answerResult.submittedAnswer} »
+            </span>
+            {!answerResult.correct && (
+              <span style={{ color: 'rgba(241,240,255,0.55)', fontWeight: 500 }}>
+                La bonne réponse était : {answerResult.correctAnswer}
+              </span>
+            )}
           </div>
         )}
         <input
