@@ -55,6 +55,8 @@ export default function GamePage() {
   const [eloChange, setEloChange] = useState<{ old: number; new: number } | null>(null)
   const [xpUpdate, setXpUpdate] = useState<{ newXp: number; newLevel: number; leveledUp: boolean } | null>(null)
   const isRankedRef = useRef(rankedFromState)
+  const isQuittingRef = useRef(false)
+  const quitWinnerIdRef = useRef<string | null>(null)
 
   const [turnBanner, setTurnBanner] = useState<{ text: string; isMine: boolean; key: number } | null>(null)
 
@@ -87,7 +89,7 @@ export default function GamePage() {
   }, [currentPlayerId, user?.id, opponentName])
 
   useEffect(() => {
-    if (!currentPlayerId || answerResult !== null || !id || !user) return
+    if (!currentPlayerId || answerResult !== null || !id || !user || winnerId !== null) return
     timerRef.current = setInterval(() => {
       setPlayerTimes(prev => {
         const current = prev[currentPlayerId] ?? 0
@@ -102,7 +104,7 @@ export default function GamePage() {
       })
     }, 1000)
     return () => { if (timerRef.current) clearInterval(timerRef.current) }
-  }, [currentPlayerId, answerResult, id, user])
+  }, [currentPlayerId, answerResult, id, user, winnerId])
 
   const handleRoomDetails = useCallback((r: Room) => setRoom(r), [])
   const handleCountdown = useCallback((count: number) => setCountdown(count), [])
@@ -136,9 +138,18 @@ export default function GamePage() {
     isRankedRef.current = true
     setIsRanked(true)
   }, [])
-  const handlePlayerQuit = useCallback(() => {
-    navigate(isRankedRef.current ? '/ranked' : `/rooms/${id}`)
-  }, [navigate, id])
+  const handlePlayerQuit = useCallback(({ winnerId: quitWinnerId }: { winnerId: string | null }) => {
+    if (isQuittingRef.current) {
+      quitWinnerIdRef.current = quitWinnerId
+      return
+    }
+    if (isRankedRef.current && quitWinnerId === user?.id) {
+      setWinnerId(quitWinnerId)
+      setTimeout(() => navigate('/ranked'), 6000)
+    } else {
+      navigate('/rooms')
+    }
+  }, [navigate, user?.id])
   const handleEloUpdated = useCallback((newElo: number) => {
     setEloChange(prev => ({ old: prev?.new ?? (user?.elo ?? 0), new: newElo }))
     updateElo(newElo)
@@ -291,7 +302,18 @@ export default function GamePage() {
       {/* Quit button */}
       <div style={{ position: 'fixed', top: 24, left: 32, zIndex: 10 }}>
         <button
-          onClick={() => { socket.emit('game:quit', { roomId: id! }, () => { navigate(isRankedRef.current ? '/ranked' : `/rooms/${id}`) }) }}
+          onClick={() => {
+            isQuittingRef.current = true
+            socket.emit('game:quit', { roomId: id! }, (err?: string) => {
+              if (err) { isQuittingRef.current = false; return }
+              if (isRankedRef.current) {
+                setWinnerId(quitWinnerIdRef.current ?? opponent?.id ?? null)
+                setTimeout(() => navigate('/ranked'), 6000)
+              } else {
+                navigate('/rooms')
+              }
+            })
+          }}
           style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '0 20px', height: 44, borderRadius: 41, background: 'rgba(244,114,182,0.08)', border: `1px solid rgba(244,114,182,0.4)`, color: ROSE, fontFamily: "'Space Grotesk', sans-serif", fontSize: 14, fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

@@ -209,12 +209,14 @@ export function registerGameHandlers(io: TypedServer, socket: TypedSocket) {
             const { ranked } = session ?? { ranked: false };
             const opponentId = playerIds.find(id => id !== userId);
             deleteSession(roomId);
-            io.to(roomId).emit('game:player_quit');
+            io.to(roomId).emit('game:player_quit', { winnerId: opponentId ?? null });
             for (const playerId of playerIds) void broadcastStatus(io, playerId, 'online');
             if (ranked && userId && opponentId) {
                 await handleRankedEnd(io, roomId, opponentId, userId);
             } else {
                 if (userId && opponentId) void handleCasualEnd(io, opponentId, userId);
+                await deleteRoom(roomId);
+                io.emit('room:deleted', roomId);
                 void broadcastRoomList(io);
             }
             ack();

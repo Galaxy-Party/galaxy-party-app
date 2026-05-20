@@ -38,6 +38,7 @@ export default function SpectatorPage() {
   const [answerResult, setAnswerResult] = useState<{ correct: boolean; correctAnswer: string; submittedAnswer: string; answeredBy: string } | null>(null)
   const [playerTimes, setPlayerTimes] = useState<Record<string, number>>({})
   const [winnerId, setWinnerId] = useState<string | null>(null)
+  const [playerQuit, setPlayerQuit] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -61,7 +62,7 @@ export default function SpectatorPage() {
   }, [id])
 
   useEffect(() => {
-    if (!currentPlayerId || answerResult !== null || !id) return
+    if (!currentPlayerId || answerResult !== null || !id || winnerId !== null) return
     timerRef.current = setInterval(() => {
       setPlayerTimes(prev => {
         const current = prev[currentPlayerId] ?? 0
@@ -73,7 +74,7 @@ export default function SpectatorPage() {
       })
     }, 1000)
     return () => { if (timerRef.current) clearInterval(timerRef.current) }
-  }, [currentPlayerId, answerResult, id])
+  }, [currentPlayerId, answerResult, id, winnerId])
 
   const handleRoomDetails = useCallback((r: Room) => setRoom(r), [])
   const handleSpectatorState = useCallback(({ question, currentPlayerId, playerTimes }: { question: { id: string; label: string } | null; currentPlayerId: string; playerTimes: Record<string, number> }) => {
@@ -94,9 +95,12 @@ export default function SpectatorPage() {
   }, [])
   const handleGameOver = useCallback(({ winnerId }: { winnerId: string }) => {
     setWinnerId(winnerId)
-  }, [])
-  const handlePlayerQuit = useCallback(() => {
-    navigate('/rooms')
+    setTimeout(() => navigate('/rooms'), 8000)
+  }, [navigate])
+  const handlePlayerQuit = useCallback(({ winnerId }: { winnerId: string | null }) => {
+    setPlayerQuit(true)
+    setWinnerId(winnerId ?? '')
+    setTimeout(() => navigate('/rooms'), 8000)
   }, [navigate])
 
   useSocket('room:details', handleRoomDetails)
@@ -149,24 +153,44 @@ export default function SpectatorPage() {
       )}
 
       {/* Game over overlay */}
-      {winnerId !== null && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 30, background: 'rgba(7,5,15,0.92)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div className="card-in" style={{ background: 'rgba(12,8,28,0.96)', border: `1px solid ${BORDER}`, borderRadius: 28, padding: '48px 64px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20, boxShadow: '0 32px 80px rgba(0,0,0,0.7)', textAlign: 'center' }}>
-            <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 52, color: INDIGO, textShadow: 'rgba(129,140,248,0.4)' }}>
-              Partie terminée
+      {winnerId !== null && (() => {
+        const winnerName = room?.users.find(u => u.id === winnerId)?.username ?? null
+        return (
+          <div style={{ position: 'fixed', inset: 0, zIndex: 30, background: 'rgba(7,5,15,0.92)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div className="card-in" style={{ background: 'rgba(12,8,28,0.96)', border: `1px solid ${BORDER}`, borderRadius: 28, padding: '48px 64px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, boxShadow: '0 32px 80px rgba(0,0,0,0.7)', textAlign: 'center', minWidth: 340 }}>
+              <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 48, color: INDIGO, textShadow: '0 0 32px rgba(129,140,248,0.4)' }}>
+                Partie terminée
+              </div>
+              {playerQuit ? (
+                <>
+                  <div style={{ fontSize: 15, color: 'rgba(241,240,255,0.6)', fontFamily: "'DM Sans', sans-serif" }}>
+                    Un joueur a quitté la partie.
+                  </div>
+                  {winnerName && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 18px', borderRadius: 12, background: 'rgba(129,140,248,0.08)', border: `1px solid rgba(129,140,248,0.25)` }}>
+                      <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 13, color: 'rgba(241,240,255,0.4)' }}>Vainqueur</span>
+                      <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 16, color: INDIGO }}>{winnerName}</span>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div style={{ fontSize: 15, color: 'rgba(241,240,255,0.6)', fontFamily: "'DM Sans', sans-serif" }}>
+                  {winnerName ? <><span style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, color: INDIGO }}>{winnerName}</span> a gagné !</> : 'La partie est terminée.'}
+                </div>
+              )}
+              <div style={{ marginTop: 4, fontSize: 12, color: 'rgba(241,240,255,0.25)', fontFamily: "'DM Sans', sans-serif" }}>
+                Redirection automatique dans quelques secondes…
+              </div>
+              <button
+                onClick={() => navigate('/rooms')}
+                style={{ marginTop: 8, padding: '0 40px', height: 50, borderRadius: 41, background: 'rgba(79,70,229,0.15)', border: `1px solid ${INDIGO}`, color: '#f1f0ff', fontFamily: "'Space Grotesk', sans-serif", fontSize: 15, fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}
+              >
+                Retour aux salons
+              </button>
             </div>
-            <div style={{ fontSize: 16, color: 'rgba(241,240,255,0.72)', fontFamily: "'DM Sans', sans-serif" }}>
-              {room?.users.find(u => u.id === winnerId)?.username ?? 'Un joueur'} a gagné.
-            </div>
-            <button
-              onClick={() => navigate('/rooms')}
-              style={{ marginTop: 12, padding: '0 40px', height: 52, borderRadius: 41, background: 'rgba(79,70,229,0.15)', border: `1px solid ${INDIGO}`, color: '#f1f0ff', fontFamily: "'Space Grotesk', sans-serif", fontSize: 15, fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}
-            >
-              Retour aux salons
-            </button>
           </div>
-        </div>
-      )}
+        )
+      })()}
 
       {/* Spectator badge + back button */}
       <div style={{ position: 'fixed', top: 24, left: 32, zIndex: 10 }}>

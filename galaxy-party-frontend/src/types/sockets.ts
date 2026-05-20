@@ -36,7 +36,7 @@ export interface ServerToClientEvents {
     "game:question": (data: { question: { id: string; label: string }; currentPlayerId: string; playerTimes: Record<string, number> }) => void;
     "game:answer_result": (data: { correct: boolean; correctAnswer: string; submittedAnswer: string; answeredBy: string; playerTimes: Record<string, number> }) => void;
     "game:over": (data: { winnerId: string }) => void;
-    "game:player_quit": () => void;
+    "game:player_quit": (data: { winnerId: string | null }) => void;
     "hello:message": (hello: Hello) => void;
     "room:created": (room: Room) => void;
     "room:deleted": (roomId: string) => void;
