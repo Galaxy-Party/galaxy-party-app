@@ -1,13 +1,13 @@
-﻿import { Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useUserContext } from '../hooks/useUserContext'
+import { useLevels } from '../hooks/useLevels'
 import Starfield from '../components/Starfield'
+import FriendsPanel from '../components/FriendsPanel'
+import GameInviteNotif from '../components/GameInviteNotif'
+import RulesModal from '../components/RulesModal'
 import logo from '../assets/logo.png'
-
-const INDIGO = '#818cf8'
-const ROSE = '#f472b6'
-const BORDER = 'rgba(129,140,248,0.22)'
-const TEXT_DIM = 'rgba(241,240,255,0.35)'
-const NAVY = '#051240'
+import socket from '../socket/client'
 
 function Nebulae() {
   return (
@@ -24,124 +24,208 @@ const dockItems = [
     path: '/create-room',
     label: 'Créer un salon',
     sub: 'Nouvelle partie',
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ width: 20, height: 20 }}>
-        <circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>
-      </svg>
-    ),
+    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>,
   },
   {
     path: '/rooms',
     label: 'Rejoindre',
     sub: 'Salons ouverts',
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ width: 20, height: 20 }}>
-        <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>
-      </svg>
-    ),
+    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>,
   },
   {
-    path: '/rules',
-    label: 'Règles du jeu',
-    sub: 'Comment jouer ?',
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ width: 20, height: 20 }}>
-        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
-        <polyline points="14 2 14 8 20 8"/>
-        <line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/>
-      </svg>
-    ),
+    path: '/ranked',
+    label: 'Classé',
+    sub: 'Mode ranked',
+    ranked: true,
+    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>,
   },
 ]
 
 export default function AppLayout() {
-  const { user, logout } = useUserContext()
+  const { user, logout, updateElo } = useUserContext()
+  const levels = useLevels()
   const navigate = useNavigate()
   const { pathname } = useLocation()
+  const [friendsOpen, setFriendsOpen] = useState(false)
+  const [rulesOpen, setRulesOpen] = useState(false)
+  const [hasNotif, setHasNotif] = useState(false)
+  const [gameInvite, setGameInvite] = useState<{ inviteId: string; fromUserId: string; fromUsername: string; fromImageName: string | null } | null>(null)
+
+  useEffect(() => {
+    const onList = ({ requests }: { requests: unknown[] }) => {
+      if (!friendsOpen) setHasNotif(requests.length > 0)
+    }
+    const onRequested = () => { if (!friendsOpen) setHasNotif(true) }
+    const onMessage  = () => { if (!friendsOpen) setHasNotif(true) }
+
+    const onInvite = (invite: { inviteId: string; fromUserId: string; fromUsername: string; fromImageName: string | null }) => {
+      setGameInvite(invite)
+    }
+    const onInviteAccepted = (roomId: string) => {
+      setGameInvite(null)
+      navigate(`/rooms/${roomId}`)
+    }
+    const onEloUpdated = (newElo: number) => updateElo(newElo)
+
+    socket.on('friend:list', onList)
+    socket.on('friend:requested', onRequested)
+    socket.on('message:received', onMessage)
+    socket.on('friend:game_invite', onInvite)
+    socket.on('friend:invite_accepted', onInviteAccepted)
+    socket.on('ranked:elo_updated', onEloUpdated)
+    return () => {
+      socket.off('friend:list', onList)
+      socket.off('friend:requested', onRequested)
+      socket.off('message:received', onMessage)
+      socket.off('friend:game_invite', onInvite)
+      socket.off('friend:invite_accepted', onInviteAccepted)
+      socket.off('ranked:elo_updated', onEloUpdated)
+    }
+  }, [friendsOpen, navigate, updateElo])
 
   return (
-    <div style={{ position: 'relative', width: '100vw', height: '100vh', overflow: 'hidden', background: '#07050f', fontFamily: "'DM Sans', sans-serif" }}>
+    <div className="relative w-screen h-screen overflow-hidden bg-[#07050f]">
+      {rulesOpen && <RulesModal onClose={() => setRulesOpen(false)} />}
+      <FriendsPanel open={friendsOpen} onClose={() => setFriendsOpen(false)} />
+      {friendsOpen && (
+        <div className="fixed inset-0 z-20" onClick={() => setFriendsOpen(false)} />
+      )}
+      {gameInvite && (
+        <GameInviteNotif
+          invite={gameInvite}
+          onAccept={(roomId) => { setGameInvite(null); navigate(`/rooms/${roomId}`) }}
+          onDecline={() => setGameInvite(null)}
+        />
+      )}
       <Starfield />
       <Nebulae />
 
-      <div style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <div className="relative z-[1] w-full h-full flex flex-col">
 
         {/* Header */}
-        <header style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 32px 0', flexShrink: 0 }}>
-          <button
-            onClick={() => navigate('/menu')}
-            style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
-          >
-            <img src={logo} alt="Galaxy Party" style={{ height: 120, objectFit: 'contain' }} />
+        <header className="w-full flex items-center justify-between px-8 pt-5 shrink-0">
+          <button onClick={() => navigate('/menu')} className="bg-transparent border-none p-0 cursor-pointer">
+            <img src={logo} alt="Galaxy Party" className="h-[120px] object-contain" />
           </button>
+
           {user && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 9, background: 'rgba(12,8,28,0.6)', backdropFilter: 'blur(14px)', border: `1px solid ${BORDER}`, borderRadius: 30, padding: '7px 16px 7px 10px' }}>
-              <div style={{ width: 28, height: 28, borderRadius: '50%', background: NAVY, border: `1px solid ${INDIGO}`, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <img src={user.imageName ?? undefined} alt="avatar" style={{ width: '80%', height: '80%', objectFit: 'contain' }} />
-              </div>
-              <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 13, fontWeight: 600, color: '#f1f0ff' }}>{user.username}</span>
-              <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#34d399', boxShadow: '0 0 6px #34d399', flexShrink: 0 }} />
+            <div className="flex items-center gap-[10px]">
+              {/* XP bar */}
+              {(() => {
+                const xp = user.xp ?? 0
+                const level = user.level ?? 1
+                const nextLevel = levels.find(l => l.levelNumber === level + 1)
+                const curLevel = levels.find(l => l.levelNumber === level)
+                const progress = curLevel && nextLevel
+                  ? Math.min(100, Math.round(((xp - curLevel.xpRequired) / (nextLevel.xpRequired - curLevel.xpRequired)) * 100))
+                  : 100
+                return (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ width: 22, height: 22, borderRadius: '50%', background: 'linear-gradient(135deg,#4f46e5,#7c3aed)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Space Grotesk', sans-serif", fontSize: 10, fontWeight: 700, color: 'white', flexShrink: 0, boxShadow: '0 0 8px rgba(129,140,248,0.4)' }}>
+                      {level}
+                    </div>
+                    <div style={{ width: 72, height: 4, borderRadius: 2, background: 'rgba(129,140,248,0.15)', overflow: 'hidden', flexShrink: 0 }}>
+                      <div style={{ height: '100%', borderRadius: 2, background: 'linear-gradient(90deg,#818cf8,#f472b6)', width: `${progress}%`, transition: 'width 0.6s ease' }} />
+                    </div>
+                    <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: 'rgba(241,240,255,0.35)', whiteSpace: 'nowrap' }}>
+                      {nextLevel ? `${xp}/${nextLevel.xpRequired}` : `${xp} XP`}
+                    </span>
+                  </div>
+                )
+              })()}
+
+              {/* Friends button */}
+              <button
+                onClick={() => { setFriendsOpen(o => !o); setHasNotif(false) }}
+                className={`relative flex items-center gap-2 backdrop-blur-[14px] rounded-[30px] py-[7px] pr-4 pl-3 transition-all duration-200 ${friendsOpen ? 'bg-[rgba(129,140,248,0.15)] border border-[#818cf8]' : 'bg-[rgba(12,8,28,0.92)] border border-[rgba(129,140,248,0.45)]'}`}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke={friendsOpen ? '#818cf8' : 'rgba(241,240,255,0.85)'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-[18px] h-[18px] shrink-0">
+                  <circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/>
+                  <path d="M16 3.13a4 4 0 010 7.75"/><path d="M21 21v-2a4 4 0 00-3-3.85"/>
+                </svg>
+                <span className={`font-display text-[13px] font-semibold ${friendsOpen ? 'text-[#818cf8]' : 'text-[#f1f0ff]'}`}>Amis</span>
+                {hasNotif && <span className="absolute top-[6px] right-[8px] w-2 h-2 rounded-full bg-[#f472b6] shadow-[0_0_6px_#f472b6]" />}
+              </button>
+
+              {/* Player tag */}
+              <button
+                onClick={() => navigate('/profile')}
+                className="flex items-center gap-[9px] bg-[rgba(12,8,28,0.92)] backdrop-blur-[14px] border border-[rgba(129,140,248,0.45)] rounded-[30px] py-[7px] pr-4 pl-[10px] cursor-pointer transition-all duration-200 hover:border-[#818cf8] hover:bg-[rgba(129,140,248,0.1)]"
+              >
+                <div className="w-7 h-7 rounded-full bg-[#051240] border border-[#818cf8] overflow-hidden flex items-center justify-center shrink-0">
+                  <img src={user.imageName ?? undefined} alt="avatar" className="w-[80%] h-[80%] object-contain" />
+                </div>
+                <span className="font-display text-[13px] font-semibold text-[#f1f0ff]">{user.username}</span>
+                <div className="w-[7px] h-[7px] rounded-full bg-[#34d399] shadow-[0_0_6px_#34d399] shrink-0" />
+              </button>
             </div>
           )}
         </header>
 
-        {/* Content area */}
-        <div style={{ flex: 1, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '14px 32px 4px', overflow: 'hidden' }}>
+        {/* Content */}
+        <div className="flex-1 w-full flex items-center justify-center px-8 py-[14px] overflow-hidden">
           <Outlet />
         </div>
 
         {/* Dock */}
-        <div style={{ flexShrink: 0, display: 'flex', justifyContent: 'center', padding: '10px 32px 24px', width: '100%' }}>
-          <div style={{ display: 'flex', gap: 6, background: 'rgba(12,8,28,0.8)', backdropFilter: 'blur(24px)', border: `1px solid ${BORDER}`, borderRadius: 20, padding: 7, boxShadow: '0 8px 32px rgba(0,0,0,0.5)', width: 'min(940px, 92vw)' }}>
-            {dockItems.map((item) => {
-              const isActive = pathname === item.path
+        <div className="shrink-0 flex justify-center px-8 pb-6 pt-[10px] w-full">
+          <div className="flex gap-[6px] bg-[rgba(12,8,28,0.95)] backdrop-blur-[24px] border border-[rgba(129,140,248,0.4)] rounded-[20px] p-[7px] shadow-[0_8px_40px_rgba(0,0,0,0.7)] w-[min(940px,92vw)]">
+
+            {dockItems.map(item => {
+              const active = pathname === item.path
+              const isRanked = 'ranked' in item && item.ranked
+              const activeColor = isRanked ? '#fbbf24' : '#818cf8'
+              const activeBg = isRanked ? 'rgba(251,191,36,0.12)' : 'rgba(129,140,248,0.12)'
+              const activeShadow = isRanked ? '0 0 16px rgba(251,191,36,0.15)' : '0 0 16px rgba(129,140,248,0.12)'
+              const activeSubColor = isRanked ? 'rgba(251,191,36,0.5)' : 'rgba(129,140,248,0.5)'
               return (
                 <button
                   key={item.path}
                   onClick={() => navigate(item.path)}
-                  style={{
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
-                    padding: '10px 16px', flex: 1, borderRadius: 14,
-                    border: `1px solid ${isActive ? INDIGO : 'transparent'}`,
-                    background: isActive ? 'rgba(129,140,248,0.12)' : 'transparent',
-                    boxShadow: isActive ? '0 0 16px rgba(129,140,248,0.12)' : 'none',
-                    transition: 'all 0.2s ease',
-                    color: isActive ? INDIGO : TEXT_DIM,
-                  }}
+                  className={`flex flex-col items-center gap-[2px] py-[10px] px-4 flex-1 rounded-[14px] border transition-all duration-200 ${active ? 'border-transparent' : 'border-transparent bg-transparent'}`}
+                  style={active ? { background: activeBg, borderColor: activeColor, boxShadow: activeShadow } : {}}
                 >
-                  <div style={{ opacity: isActive ? 1 : 0.4 }}>{item.icon}</div>
-                  <span style={{ fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: isActive ? INDIGO : TEXT_DIM, transition: 'color 0.2s', textAlign: 'center' }}>
+                  <div style={{ opacity: active ? 1 : 0.7, color: active ? activeColor : 'rgba(241,240,255,0.75)' }}>{item.icon}</div>
+                  <span className="text-[12px] font-semibold uppercase tracking-[0.05em] text-center transition-colors duration-200" style={{ color: active ? activeColor : 'rgba(241,240,255,0.75)' }}>
                     {item.label}
                   </span>
-                  <span style={{ fontSize: 10, color: isActive ? 'rgba(129,140,248,0.5)' : 'rgba(241,240,255,0.2)', textAlign: 'center' }}>
+                  <span className="text-[10px] text-center transition-colors duration-200" style={{ color: active ? activeSubColor : 'rgba(241,240,255,0.4)' }}>
                     {item.sub}
                   </span>
                 </button>
               )
             })}
-            <div style={{ width: 1, background: 'rgba(129,140,248,0.15)', margin: '4px 0', alignSelf: 'stretch', flexShrink: 0 }} />
+
+            <button
+              onClick={() => setRulesOpen(true)}
+              className="flex flex-col items-center gap-[2px] py-[10px] px-4 flex-1 rounded-[14px] border border-transparent bg-transparent transition-all duration-200"
+            >
+              <div className="opacity-70 text-[rgba(241,240,255,0.75)]">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+                  <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/>
+                </svg>
+              </div>
+              <span className="text-[12px] font-semibold uppercase tracking-[0.05em] text-center text-[rgba(241,240,255,0.75)]">Règles</span>
+              <span className="text-[10px] text-center text-[rgba(241,240,255,0.4)]">Comment jouer ?</span>
+            </button>
+
+            <div className="w-px bg-[rgba(129,140,248,0.3)] my-1 self-stretch shrink-0" />
+
             <button
               onClick={logout}
-              style={{
-                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
-                padding: '10px 16px', flex: 1, borderRadius: 14,
-                border: '1px solid transparent',
-                background: 'transparent',
-                transition: 'all 0.2s ease',
-              }}
+              className="flex flex-col items-center gap-[2px] py-[10px] px-4 flex-1 rounded-[14px] border border-transparent bg-transparent transition-all duration-200"
             >
-              <div style={{ opacity: 0.5, color: ROSE }}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ width: 20, height: 20 }}>
+              <div className="opacity-80 text-[#f472b6]">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
                   <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
                   <polyline points="16 17 21 12 16 7"/>
                   <line x1="21" y1="12" x2="9" y2="12"/>
                 </svg>
               </div>
-              <span style={{ fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: ROSE, opacity: 0.7, textAlign: 'center' }}>
-                Déconnexion
-              </span>
-              <span style={{ fontSize: 10, color: 'rgba(244,114,182,0.3)', textAlign: 'center' }}>Quitter</span>
+              <span className="text-[12px] font-semibold uppercase tracking-[0.05em] text-center text-[#f472b6] opacity-90">Déconnexion</span>
+              <span className="text-[10px] text-center text-[rgba(244,114,182,0.55)]">Quitter</span>
             </button>
+
           </div>
         </div>
       </div>

@@ -31,6 +31,9 @@ public class UserService {
         if (updateUserDto.getImageName() != null) {
             userEntity.setImageName(updateUserDto.getImageName());
         }
+        if (updateUserDto.getEquippedTitle() != null) {
+            userEntity.setEquippedTitle(updateUserDto.getEquippedTitle());
+        }
 
         return userRepository.save(userEntity);
     }

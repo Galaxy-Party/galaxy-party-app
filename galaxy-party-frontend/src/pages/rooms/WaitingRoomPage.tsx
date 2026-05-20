@@ -7,6 +7,7 @@ import type { Room } from '../../types/room/models'
 import type { User } from '../../types/user/models'
 import Starfield from '../../components/Starfield'
 import ReturnMenuModal from '../../components/ReturnMenuModal'
+import { useToast } from '../../hooks/useToast'
 
 const INDIGO = '#818cf8'
 const ROSE = '#f472b6'
@@ -29,6 +30,7 @@ export default function WaitingRoomPage() {
   const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
   const { user } = useUserContext()
+  const toast = useToast()
   const [showReturnModal, setShowReturnModal] = useState(false)
   const [timer, setTimer] = useState(150000)
   const [isPrivate, setIsPrivate] = useState(false)
@@ -43,13 +45,13 @@ export default function WaitingRoomPage() {
 
   const emitUpdate = (patch: { timer?: number; password?: string }) => {
     if (!id) return
-    socket.emit('room:update', { roomId: id, ...patch }, (err) => { if (err) console.error(err) })
+    socket.emit('room:update', { roomId: id, ...patch }, (err) => { if (err) toast.error(err) })
   }
 
   useEffect(() => {
     if (!id) { navigate('/menu'); return }
-    socket.emit('room:get', id, (err) => { if (err) navigate('/menu') })
-  }, [id, navigate])
+    socket.emit('room:get', id, (err) => { if (err) { toast.error(err); navigate('/menu') } })
+  }, [id, navigate, toast])
 
   const handleRoomDetails = useCallback((r: Room) => {
     if (user && !r.users.some(u => u.id === user.id)) { navigate('/menu'); return }
@@ -88,7 +90,7 @@ export default function WaitingRoomPage() {
   const handleLeave = () => {
     if (!id || !user) return
     socket.emit('room:leave', { roomId: id }, (err) => {
-      if (err) console.error(err)
+      if (err) toast.error(err)
       navigate('/menu')
     })
   }
@@ -249,7 +251,7 @@ export default function WaitingRoomPage() {
               onClick={() => {
                 setIsStarting(true)
                 socket.emit('game:start', { roomId: id!, timer }, (err) => {
-                  if (err) { console.error(err); setIsStarting(false) }
+                  if (err) { toast.error(err); setIsStarting(false) }
                 })
               }}
               style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 10, padding: '0 32px', height: 52, borderRadius: 41, background: 'rgba(79,70,229,0.15)', border: `1px solid ${INDIGO}`, color: '#f1f0ff', fontFamily: "'Space Grotesk', sans-serif", fontSize: 15, fontWeight: 600, cursor: (isOwner && room.users.length >= 2 && !isStarting) ? 'pointer' : 'not-allowed', transition: 'all 0.2s', opacity: (isOwner && room.users.length >= 2) ? 1 : 0.35 }}

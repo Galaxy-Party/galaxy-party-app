@@ -2,14 +2,41 @@ import type {Hello} from "./models.ts";
 import type {User} from "./user/models.ts";
 import type {CreateRoomPayload, Room} from "./room/models.ts";
 
+export type FriendStatus = 'online' | 'inroom' | 'ingame' | 'offline';
+
+export interface FriendItem {
+    friendshipId: string;
+    id: string;
+    username: string;
+    imageName: string | null;
+    status: FriendStatus;
+    roomId?: string;
+}
+
+export interface FriendRequest {
+    friendshipId: string;
+    id: string;
+    username: string;
+    imageName: string | null;
+}
+
+export interface ChatMessage {
+    id: string;
+    senderId: string;
+    receiverId: string;
+    content: string;
+    createdAt: string;
+    readAt: string | null;
+}
+
 export interface ServerToClientEvents {
     "game:loading": () => void;
     "game:countdown": (count: number) => void;
     "game:started": (data: { currentPlayerId: string }) => void;
     "game:question": (data: { question: { id: string; label: string }; currentPlayerId: string; playerTimes: Record<string, number> }) => void;
-    "game:answer_result": (data: { correct: boolean; correctAnswer: string; answeredBy: string; playerTimes: Record<string, number> }) => void;
+    "game:answer_result": (data: { correct: boolean; correctAnswer: string; submittedAnswer: string; answeredBy: string; playerTimes: Record<string, number> }) => void;
     "game:over": (data: { winnerId: string }) => void;
-    "game:player_quit": () => void;
+    "game:player_quit": (data: { winnerId: string | null }) => void;
     "hello:message": (hello: Hello) => void;
     "room:created": (room: Room) => void;
     "room:deleted": (roomId: string) => void;
@@ -18,6 +45,20 @@ export interface ServerToClientEvents {
     "room:user_joined": (user: User) => void;
     "room:user_left": (userId: string) => void;
     "room:owner_changed": (newOwnerId: string) => void;
+    "game:spectator_state": (data: { question: { id: string; label: string } | null; currentPlayerId: string; playerTimes: Record<string, number> }) => void;
+    "friend:list": (data: { friends: FriendItem[]; requests: FriendRequest[] }) => void;
+    "friend:status": (userId: string, status: FriendStatus, roomId?: string) => void;
+    "friend:requested": (request: FriendRequest) => void;
+    "friend:game_invite": (invite: { inviteId: string; fromUserId: string; fromUsername: string; fromImageName: string | null }) => void;
+    "friend:invite_accepted": (roomId: string) => void;
+    "message:received": (message: ChatMessage) => void;
+    "ranked:match_found": (data: { roomId: string; opponent: { userId: string; username: string; imageName: string | null; elo: number } }) => void;
+    "ranked:elo_updated": (newElo: number) => void;
+    "ranked:leaderboard": (data: { entries: { id: string; username: string; imageName: string | null; elo: number }[]; myElo: number }) => void;
+    "ranked:session_started": () => void;
+    "ranked:ranks": (ranks: { name: string; icon: string; color: string; minElo: number; maxElo: number | null; next: string | null }[]) => void;
+    "levels:definitions": (levels: { levelNumber: number; xpRequired: number; title: string }[]) => void;
+    "profile:xp_updated": (data: { xp: number; level: number; leveledUp: boolean }) => void;
 }
 
 export interface ClientToServerEvents {
@@ -43,4 +84,18 @@ export interface ClientToServerEvents {
         payload: { roomId: string; timer?: number; password?: string },
         ack: (err?: string) => void
     ) => void;
+    "room:spectate": (payload: { roomId: string }, ack: (err?: string) => void) => void;
+    "room:spectate_leave": (payload: { roomId: string }, ack: (err?: string) => void) => void;
+    "friend:get_list": (ack: (err?: string) => void) => void;
+    "friend:request": (toUsername: string, ack: (err?: string) => void) => void;
+    "friend:accept": (friendshipId: string, ack: (err?: string) => void) => void;
+    "friend:decline": (friendshipId: string, ack: (err?: string) => void) => void;
+    "friend:invite": (toUserId: string, ack: (err?: string) => void) => void;
+    "friend:invite_accept": (inviteId: string, ack: (err?: string, roomId?: string) => void) => void;
+    "friend:invite_decline": (inviteId: string, ack: (err?: string) => void) => void;
+    "message:send": (payload: { toUserId: string; content: string }, ack: (err?: string, message?: ChatMessage) => void) => void;
+    "message:get_history": (payload: { withUserId: string }, ack: (err?: string, messages?: ChatMessage[]) => void) => void;
+    "ranked:join_queue": (ack: (err?: string) => void) => void;
+    "ranked:leave_queue": (ack: (err?: string) => void) => void;
+    "ranked:get_leaderboard": (ack: (err?: string) => void) => void;
 }

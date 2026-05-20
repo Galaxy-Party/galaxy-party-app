@@ -47,6 +47,29 @@ public class UserEntity {
     @Column
     private String imageName;
 
+    @Column(nullable = false)
+    @Builder.Default
+    private int elo = 0;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private int wins = 0;
+
+    @Column(name = "games_played", nullable = false)
+    @Builder.Default
+    private int gamesPlayed = 0;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private int xp = 0;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private int level = 1;
+
+    @Column(name = "equipped_title")
+    private String equippedTitle;
+
     @ManyToOne
     @JoinColumn(name = "room_id", nullable = true)
     private RoomEntity room;
@@ -56,6 +79,12 @@ public class UserEntity {
                 .id(userEntity.getId())
                 .username(userEntity.getUsername())
                 .imageName(userEntity.getImageName())
+                .elo(userEntity.getElo())
+                .wins(userEntity.getWins())
+                .gamesPlayed(userEntity.getGamesPlayed())
+                .xp(userEntity.getXp())
+                .level(userEntity.getLevel())
+                .equippedTitle(userEntity.getEquippedTitle())
                 .build();
     }
 }

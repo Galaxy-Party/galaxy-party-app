@@ -16,6 +16,7 @@ export interface LoginPayload {
 export interface UpdateProfilePayload {
   username?: string
   imageName?: string
+  equippedTitle?: string
 }
 
 export const authApi = {

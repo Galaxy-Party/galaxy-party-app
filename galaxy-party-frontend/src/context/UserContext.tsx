@@ -28,19 +28,22 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         if (!socket.connected) socket.connect()
     }, [user])
 
+    useEffect(() => {
+        const onXpUpdated = ({ xp, level }: { xp: number; level: number }) => {
+            setUser(prev => prev ? { ...prev, xp, level } : null)
+        }
+        socket.on('profile:xp_updated', onXpUpdated)
+        return () => { socket.off('profile:xp_updated', onXpUpdated) }
+    }, [])
+
     const register = useCallback(async (payload: RegisterPayload) => {
         const u = await authApi.register(payload)
         setUser(u)
         return u
     }, [])
 
-    const login = useCallback(async (payload: LoginPayload, imageName?: string) => {
+    const login = useCallback(async (payload: LoginPayload) => {
         const u = await authApi.login(payload)
-        if (imageName && imageName !== u.imageName) {
-            const updated = await authApi.updateProfile({ imageName })
-            setUser(updated)
-            return updated
-        }
         setUser(u)
         return u
     }, [])
@@ -56,8 +59,16 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         return u
     }, [])
 
+    const updateElo = useCallback((newElo: number) => {
+        setUser(prev => prev ? { ...prev, elo: newElo } : null)
+    }, [])
+
+    const updateXp = useCallback((xp: number, level: number) => {
+        setUser(prev => prev ? { ...prev, xp, level } : null)
+    }, [])
+
     return (
-        <UserContext.Provider value={{ user, isLoading, register, login, logout, updateProfile }}>
+        <UserContext.Provider value={{ user, isLoading, register, login, logout, updateProfile, updateElo, updateXp }}>
             {children}
         </UserContext.Provider>
     )

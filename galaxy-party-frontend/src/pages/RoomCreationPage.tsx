@@ -4,6 +4,7 @@ import { useUserContext } from '../hooks/useUserContext'
 import { useSocket } from '../hooks/useSocket'
 import socket from '../socket/client'
 import type { Room } from '../types/room/models'
+import { useToast } from '../hooks/useToast'
 
 const INDIGO = '#818cf8'
 const BORDER = 'rgba(129,140,248,0.22)'
@@ -12,6 +13,7 @@ const PANEL = 'rgba(12,8,28,0.82)'
 export default function RoomCreationPage() {
   const navigate = useNavigate()
   const { user } = useUserContext()
+  const toast = useToast()
 
   const [name, setName] = useState('')
   const [password, setPassword] = useState('')
@@ -26,7 +28,7 @@ export default function RoomCreationPage() {
   const handleCreate = () => {
     if (!name.trim() || !user) return
     socket.emit('room:create', { name: name.trim(), password: password || null }, (err?: string) => {
-      if (err) console.error(err)
+      if (err) toast.error(err)
     })
   }
 

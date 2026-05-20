@@ -8,6 +8,7 @@ import type {
 interface SocketData {
     userId?: string;
     roomId?: string;
+    spectatingRoomId?: string;
 }
 
 export type TypedServer = Server<
