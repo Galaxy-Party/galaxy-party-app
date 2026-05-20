@@ -3,17 +3,17 @@ import type { FriendStatus, ChatMessage } from '../../types/sockets'
 export type { FriendStatus, ChatMessage }
 
 export const STATUS_DOT: Record<FriendStatus, string> = {
-  online:  'bg-[#34d399] shadow-[0_0_4px_#34d399]',
-  inroom:  'bg-[#818cf8] shadow-[0_0_4px_#818cf8]',
-  ingame:  'bg-[#f59e0b] shadow-[0_0_4px_#f59e0b]',
-  offline: 'bg-[rgba(241,240,255,0.2)]',
+  online:  'bg-emerald shadow-[0_0_4px_var(--color-emerald)]',
+  inroom:  'bg-indigo shadow-[0_0_4px_var(--color-indigo)]',
+  ingame:  'bg-amber-deep shadow-[0_0_4px_var(--color-amber-deep)]',
+  offline: 'bg-text/20',
 }
 
 export const STATUS_TEXT: Record<FriendStatus, string> = {
-  online:  'text-[#34d399]',
-  inroom:  'text-[#818cf8]',
-  ingame:  'text-[#f59e0b]',
-  offline: 'text-[rgba(241,240,255,0.35)]',
+  online:  'text-emerald',
+  inroom:  'text-indigo',
+  ingame:  'text-amber-deep',
+  offline: 'text-text-dim',
 }
 
 export const STATUS_LABEL: Record<FriendStatus, string> = {
