@@ -42,13 +42,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         return u
     }, [])
 
-    const login = useCallback(async (payload: LoginPayload, imageName?: string) => {
+    const login = useCallback(async (payload: LoginPayload) => {
         const u = await authApi.login(payload)
-        if (imageName && imageName !== u.imageName) {
-            const updated = await authApi.updateProfile({ imageName })
-            setUser(updated)
-            return updated
-        }
         setUser(u)
         return u
     }, [])

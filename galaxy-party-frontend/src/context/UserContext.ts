@@ -6,7 +6,7 @@ export type UserContextType = {
     user: User | null
     isLoading: boolean
     register: (payload: RegisterPayload) => Promise<User>
-    login: (payload: LoginPayload, imageName?: string) => Promise<User>
+    login: (payload: LoginPayload) => Promise<User>
     logout: () => Promise<void>
     updateProfile: (payload: UpdateProfilePayload) => Promise<User>
     updateElo: (newElo: number) => void

@@ -75,7 +75,7 @@ export default function LoginPage() {
     if (!canLogin) return
     setSubmitting(true); setError(null)
     try {
-      await login({ emailOrUsername: emailOrUsername.trim(), password: loginPassword }, avatars[avatarIndex])
+      await login({ emailOrUsername: emailOrUsername.trim(), password: loginPassword })
       navigate('/menu', { replace: true })
     } catch (err) {
       setError(err instanceof ApiError && err.status === 401 ? 'Identifiants incorrects' : 'Une erreur est survenue, réessayez')
@@ -182,24 +182,24 @@ export default function LoginPage() {
                 />
                 {fieldErrors.password && <p className={FIELD_ERR}>{fieldErrors.password}</p>}
               </div>
+              <div className="mb-[22px]">
+                <label className={LABEL}>Votre avatar</label>
+                <div className="grid grid-cols-5 gap-2">
+                  {avatars.map((src, i) => (
+                    <div
+                      key={i}
+                      onClick={() => setAvatarIndex(i)}
+                      className={`aspect-square rounded-full border-2 bg-[#051240] flex items-center justify-center cursor-pointer transition-all duration-200 overflow-hidden p-[6px] hover:border-[rgba(129,140,248,0.5)] ${i === avatarIndex ? 'border-[#818cf8] shadow-[0_0_12px_rgba(129,140,248,0.3)]' : 'border-[rgba(129,140,248,0.18)]'}`}
+                    >
+                      <img src={src} alt={`avatar-${i}`} className="w-4/5 h-4/5 object-contain" />
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
 
-          {/* Avatars */}
-          <label className={LABEL}>Votre avatar</label>
-          <div className="grid grid-cols-5 gap-2 mb-[22px]">
-            {avatars.map((src, i) => (
-              <div
-                key={i}
-                onClick={() => setAvatarIndex(i)}
-                className={`aspect-square rounded-full border-2 bg-[#051240] flex items-center justify-center cursor-pointer transition-all duration-200 overflow-hidden p-[6px] hover:border-[rgba(129,140,248,0.5)] ${i === avatarIndex ? 'border-[#818cf8] shadow-[0_0_12px_rgba(129,140,248,0.3)]' : 'border-[rgba(129,140,248,0.18)]'}`}
-              >
-                <img src={src} alt={`avatar-${i}`} className="w-4/5 h-4/5 object-contain" />
-              </div>
-            ))}
-          </div>
-
-          {error && <p className="text-[#fca5a5] text-sm mb-4 text-center">{error}</p>}
+          {error &&<p className="text-[#fca5a5] text-sm mb-4 text-center">{error}</p>}
 
           <button
             disabled={!canSubmit}
