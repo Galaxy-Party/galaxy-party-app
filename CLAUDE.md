@@ -118,7 +118,7 @@ Standard layered architecture: `Controller → Service → Repository → JPA/Hi
 
 ### Frontend (React)
 
-**CSS**: Tailwind CSS v4 (`@import "tailwindcss"`). No inline styles in new components. `@theme { --font-display: 'Space Grotesk', sans-serif; }` defined in `index.css`. Use `font-display` class for Space Grotesk, `font-['DM_Sans',sans-serif]` is the global default. Custom animations (`nf`, `cardIn`, `fadeIn`, `spin`) in `index.css`.
+**CSS**: Tailwind CSS v4 (`@import "tailwindcss"`). No inline styles in new components. `@theme` in `index.css` is the **single source of truth** for colors (palette-named tokens: `--color-indigo`, `--color-rose`, `--color-amber`, `--color-emerald`, `--color-navy`, `--color-bg`, `--color-text`, `--color-text-dim`, `--color-border`, `--color-panel`, `--color-indigo-deep`, `--color-purple`, `--color-pink`, `--color-amber-deep`, `--color-purple-light`, `--color-danger`, `--color-silver`, `--color-bronze`) and the display font (`--font-display`). Use `font-display` class for Space Grotesk, `font-['DM_Sans',sans-serif]` is the global default. Custom animations (`nf`, `cardIn`, `fadeIn`, `spin`) in `index.css`.
 
 **State**: `UserProvider` React Context. Auth hydrated via `GET /users/me` on mount; cookie-based. `UserProvider` écoute `profile:xp_updated` globalement (socket) → met à jour `user.xp` et `user.level` en temps réel. Méthodes exposées : `updateElo(newElo)`, `updateXp(xp, level)`.
 
@@ -128,26 +128,25 @@ Standard layered architecture: `Controller → Service → Repository → JPA/Hi
 
 **API client**: `src/api/client.ts` — fetch wrapper with `credentials: 'include'` and 401→refresh interceptor.
 
-**Pages** (`src/pages/`):
-- `LoginPage` — unified auth page with tab switch (Connexion / Créer un compte). Previously two separate pages; `RegisterPage` was deleted.
-- `MenuPage`, `RulesPage`, `RoomCreationPage`, `RoomListPage`
-- `ProfilePage` — profil joueur : avatar (modal picker), titre équipé (modal picker parmi les titres débloqués), niveau + barre XP, stats (victoires/défaites/ratio/ELO/XP/niveau). Composants dans `src/components/profile/` : `AvatarPickerModal`, `TitlePickerModal`, `profileStyles.ts`.
-- `RankedPage` — hub classé (leaderboard top 10, bannière rang+ELO+progression, bouton "Jouer en Classé")
-- `MatchmakingPage` — file d'attente classée avec countdown pré-match. Navigue vers GamePage avec `{ state: { isRanked: true } }` pour signaler une partie classée.
-- `rooms/WaitingRoomPage` — room lobby with settings (timer slider, public/private toggle)
-- `rooms/GamePage` — real-time quiz game. Lit `location.state?.isRanked` pour initialiser le mode classé. Overlay de fin de game : en ranked → ELO + XP + barre progression ; en casual → XP + stats (victoires, défaites, ratio). Redirect auto vers `/ranked` après 6s si ranked.
+**Pages** — each page lives in its **own folder** `src/pages/<page>/<Page>Page.tsx`, with page-specific pieces under `<page>/components/`, `<page>/hooks/`, and `<page>/*.ts` (reducers, types, validation). Only `main.tsx` imports pages. Folders: `login`, `menu`, `roomCreation`, `roomList`, `ranked`, `matchmaking`, `waitingRoom`, `game`, `spectator`, `profile`.
+- `login/` — unified auth (Connexion / Créer un compte tabs; `RegisterPage` was merged in). Components: `TextField`, `AvatarGrid`; `validation.ts`.
+- `game/` — real-time quiz. **Logic lives in hooks/reducer, not the component**: `hooks/useGameSession` (socket subscriptions, the live clock + `time_up`, quit flow, ELO/XP rewards), `gameReducer.ts` (discrete protocol state via `useReducer`), `hooks/useTurnBanner`, `types.ts`. Components: `GameOverOverlay`, `TurnBanner`, `PlayerColumn`, `AnswerForm`. Reads `location.state?.isRanked`. Quit flow: `isQuittingRef`/`quitWinnerIdRef` (kept in the hook). `playerTimes` is `useState` (continuous clock), deliberately kept out of the reducer.
+- `spectator/` — read-only spectator. Components: `SpectatorPlayer`, `SpectatorGameOverOverlay`.
+- `waitingRoom/` — lobby (timer slider, public/private). Components: `PlayerSlot`, `RoomSettings`.
+- `ranked/` — ranked hub (top-10 leaderboard, rank/ELO banner). Components: `RanksModal`, `RankBanner`, `LeaderboardRow`.
+- `matchmaking/` — queue + pre-match countdown → navigates to game with `{ state: { isRanked: true } }`. Component: `AvatarSlot`.
+- `roomList/` — components `RoomTab`, `AvailableRoomRow`, `InProgressRoomRow`.
+- `profile/` — components `AvatarPickerModal`, `TitlePickerModal`, `ProfileIdentity`, `ProfileStats`, `EditDot`, `StatCard`; `profileStyles.ts` (`TitleColor`, `BADGE_STYLE`, `getTitleColor`).
+- `menu/` (`MenuButton`), `roomCreation/`.
 
-**Components** (`src/components/`):
-- `FriendsPanel` — slide-in panel (340px from right). Split into sub-components:
-  - `friends/FriendAvatar.tsx` — avatar with placeholder SVG
-  - `friends/FriendRow.tsx` — friend row with status dot, action buttons, unread indicator
-  - `friends/FriendRequestRow.tsx` — pending request with accept/decline
-  - `friends/FriendChat.tsx` — mini-chat with message history and input
-  - `friends/types.ts` — shared constants (STATUS_DOT, STATUS_TEXT, STATUS_LABEL) and ActiveChat interface
-- `profile/AvatarPickerModal.tsx` — modal de sélection d'avatar (grille 5 colonnes, bouton Sélectionner)
-- `profile/TitlePickerModal.tsx` — modal de sélection de titre (liste scrollable, verrous sur niveaux non atteints)
-- `profile/profileStyles.ts` — constantes partagées (couleurs, `TitleColor` union type, `BADGE_STYLE`, `getTitleColor`)
-- `Starfield`, `ProtectedRoute`, `CatchAllRedirect`, `ReturnMenuModal`, `JoinRoomModal`
+**Components** (`src/components/`, generic & reusable only):
+- `CardHeader` — panel header: icon box + title + `accent` (`indigo`|`amber`) + optional `right` slot. The icon box sets `text-{accent}`; pass the SVG with `stroke="currentColor"`. Used by menu/roomCreation/roomList/ranked/profile.
+- `Nebulae` — decorative blurred background blobs (prop `teal` adds the 3rd one).
+- `QuestionCard`, `TurnTimer` — shared by game + spectator.
+- `FriendsPanel` (+ `friends/`: `FriendAvatar`, `FriendRow`, `FriendRequestRow`, `FriendChat`, `types.ts`).
+- `Starfield`, `ProtectedRoute`, `CatchAllRedirect`, `ReturnMenuModal`, `JoinRoomModal`, `RulesModal`, `GameInviteNotif`, `Toaster`.
+
+**Utils** (`src/utils/`): `time.ts` (`formatTime`), `rank.ts` (`getRankInfo`, `getProgressToNext`, `RankDefinition`).
 
 **AppLayout** (`src/layouts/AppLayout.tsx`) :
 - Barre XP dans le header (badge niveau + barre indigo→rose + label XP/max) — mise à jour temps réel via `profile:xp_updated`
@@ -156,7 +155,7 @@ Standard layered architecture: `Controller → Service → Repository → JPA/Hi
 
 **Socket** (`src/socket/client.ts`): Socket.io with `withCredentials: true`, `autoConnect: false`.
 
-**Hooks**: `useSocket(event, handler)` for typed socket subscriptions.
+**Hooks**: shared hooks in `src/hooks/` (`useSocket(event, handler)` for typed socket subscriptions, `useUserContext`, `useLevels`, `useRanks`, `useToast`). **Page-specific hooks** go in `src/pages/<page>/hooks/`.
 
 **Vite proxy** (dev): `/api` → backend `:8080`, `/ws` → websocket `:4000`.
 
@@ -166,7 +165,7 @@ Standard layered architecture: `Controller → Service → Repository → JPA/Hi
 
 **Handlers** (`src/socket/handlers/`):
 - `room.ts` — `room:create/get/get_all/join/leave/delete/update`. On join: broadcasts `ingame` status to friends. On leave: broadcasts `online` status.
-- `game.ts` — `game:start/player_ready/answer/time_up/quit`. Timer (ms) passed from client on `game:start`, stored in `GameSession`, used to initialize `timeRemaining` per player. `displayAnswer` used as `correctAnswer` in results (fallback to `answers[0]`). `game:quit` est **async** et **await handleRankedEnd** avant d'ack — le frontend navigue dans le callback de l'ack pour garantir que la room est supprimée avant toute nouvelle recherche. En fin de partie non-classée : appelle `handleCasualEnd` (POST `/levels/game-result`) puis émet `profile:xp_updated` à chaque joueur.
+- `game.ts` — `game:start/player_ready/answer/time_up/quit`. Timer (ms) passed from client on `game:start`, stored in `GameSession`, used to initialize `timeRemaining` per player. `displayAnswer` used as `correctAnswer` in results (fallback to `answers[0]`). `game:quit` est **async** : émet `game:player_quit { winnerId }` immédiatement, puis await `handleRankedEnd` (ranked) ou `deleteRoom` (casual) avant d'ack. La room est **toujours supprimée** au quit (ranked ET casual). En fin de partie non-classée : appelle `handleCasualEnd` (POST `/levels/game-result`) puis émet `profile:xp_updated` à chaque joueur.
 - `ranked.ts` — `ranked:join_queue/leave_queue/get_leaderboard`. `ranked:join_queue` est idempotent : appelle `dequeue(userId)` en premier (pas d'erreur si déjà en file). L'adversaire est dépilé **après** la création réussie de la room (pas avant) pour éviter qu'il reste bloqué en "Recherche…" si une étape intermédiaire échoue.
 - `friend.ts` — `friend:request/accept/decline`, `message:send/get_history`. Exports `broadcastStatus` and `sendFriendList` used by index and room handlers.
 - `hello.ts` — ping/pong
@@ -184,7 +183,8 @@ Standard layered architecture: `Controller → Service → Repository → JPA/Hi
 
 **Socket events** (Server → Client):
 - `room:list/details/created/deleted/user_joined/user_left/owner_changed`
-- `game:loading/countdown/started/question/answer_result/over/player_quit`
+- `game:loading/countdown/started/question/answer_result/over`
+- `game:player_quit { winnerId: string | null }` — un joueur a quitté ; `winnerId` = id du gagnant (celui qui n'a pas quitté), null si indéterminé
 - `ranked:match_found { roomId, opponent }`, `ranked:session_started`, `ranked:elo_updated(newElo)`, `ranked:leaderboard { entries, myElo }`, `ranked:ranks`
 - `levels:definitions` — liste des 20 niveaux, émis à la connexion et mis en cache dans `LevelsContext`
 - `profile:xp_updated { xp, level, leveledUp }` — émis après chaque fin de game (ranked ET casual) aux deux joueurs. Géré globalement dans `UserProvider` (met à jour `user.xp`/`user.level`).
@@ -216,9 +216,11 @@ Standard layered architecture: `Controller → Service → Repository → JPA/Hi
 2. `MatchmakingPage` émet `ranked:join_queue` — idempotent, safe à appeler plusieurs fois
 3. Quand un adversaire est trouvé : `ranked:match_found { roomId, opponent }` → countdown 3s → navigate vers `/rooms/:id/game` avec `{ state: { isRanked: true } }`
 4. `GamePage` lit `location.state.isRanked` pour initialiser le mode classé (pas de dépendance à `ranked:session_started`)
-5. En cas de quit : `game:quit` async côté serveur, navigate dans le callback de l'ack. Le joueur qui quitte perd l'elo via `handleRankedEnd` (winner = adversaire, loser = quitteur)
-6. Fin de partie : `game:over` → `ranked:elo_updated` + `profile:xp_updated` → overlay victoire/défaite (ELO + XP) → redirect auto vers `/ranked` après 6s
-7. Timer ranked fixe : `RANKED_TIMER_MS = 150 000ms` (2min30) par joueur
+5. En cas de quit (ranked) : `game:quit` async, serveur émet `game:player_quit { winnerId }` → `handleRankedEnd` → `ranked:elo_updated` + `profile:xp_updated` → ack. Le quitteur voit l'overlay défaite (ELO perdu + XP) via l'ack ; l'adversaire voit l'overlay victoire via `game:player_quit`. Les deux redirigent vers `/ranked` après 6s.
+6. En cas de quit (casual) : même flux mais sans ELO, room détruite, les deux redirigent vers `/rooms`.
+7. Fin de partie normale : `game:over` → `ranked:elo_updated` + `profile:xp_updated` → overlay victoire/défaite (ELO + XP) → redirect auto vers `/ranked` après 6s
+8. Timer ranked fixe : `RANKED_TIMER_MS = 150 000ms` (2min30) par joueur
+
 
 ### Friends & Messaging Flow
 1. User connects → WS sends `friend:list` (accepted friends with online/ingame/offline status + pending requests)
@@ -249,7 +251,11 @@ Standard layered architecture: `Controller → Service → Repository → JPA/Hi
   open(f,'wb').write(d[3:] if d.startswith(b'\xef\xbb\xbf') else d)
   "
   ```
-- **Tailwind**: use arbitrary values for custom colors/sizes. No inline styles in new components. Define shared animations/fonts in `index.css`.
+- **Tailwind**: No inline styles in new components — style via `className` utilities. **Never** declare per-file color constants (`const INDIGO = '#818cf8'`, `const NAVY = 'var(--color-navy)'`, etc.); colors come only from the `@theme` tokens in `index.css`. Use the token utilities directly in classes: `text-indigo`, `bg-navy`, `border-border`, `text-text-dim`, gradients `from-indigo-deep to-purple`, and the opacity modifier for alpha shades (`bg-indigo/15`, `text-text/72`, `border-rose/40`). Define shared animations/fonts in `index.css`.
+- **No className constants**: never extract Tailwind class strings into a variable (`const INPUT = 'w-full bg-indigo/6 …'`, `const tabBtn = '…'`, `const ACTIVE_RING = '…'`, etc.) and never build class names by interpolation (`` `border-${accent}` ``). Write the utility classes **directly** in the `className` attribute, even if that means repeating them across sibling elements — that is the Tailwind-recommended way and keeps the styles co-located with the markup. If markup genuinely repeats, extract a small **component** (not a string constant). Dynamic/data-driven values that Tailwind cannot express (e.g. a color coming from API data) are the only case where an inline `style={{}}` is acceptable.
+- **Frontend file structure**: a page = `src/pages/<page>/<Page>Page.tsx`. Components used by **one** page → `src/pages/<page>/components/`; **reusable** components → `src/components/`. Page-specific hooks → `src/pages/<page>/hooks/`; shared hooks → `src/hooks/`. Pure helpers → `src/utils/`. When the same component/markup is duplicated across pages, promote it to `src/components/` (e.g. `Nebulae`, `QuestionCard`, `TurnTimer`, `CardHeader`) rather than copy-pasting.
+- **Keep pages thin (separate logic from presentation)**: a page component should mostly *render*. Move non-trivial logic (socket subscriptions, timers, multi-step flows, derived data) into **custom hooks** (`useGameSession`, `useTurnBanner`…). For cohesive event-driven state with several related fields, prefer a **`useReducer`** with typed actions (explicit, self-documenting transitions) over many scattered `useState`/`setX`. Continuous/side-effecting state (e.g. a per-second clock) may stay as local `useState` next to the reducer.
+- **Explaining variables, not magic conditions**: name a condition/expression when it is **reused (≥2×)** or its meaning isn't obvious (`const isMyTurn = …`, `const isSearching = phase === 'searching'`). If it's used **once and is already clear**, inline it — don't add a single-use variable for its own sake. (This is about *value/boolean* variables — distinct from the banned className-string constants above, which are never allowed.)
 - **Socket payloads**: never include `userId` — always read from `socket.data.userId`.
 - **Friend status**: derived at runtime from socket state (`roomId` set → `ingame`, connected → `online`, no socket → `offline`). Never stored in DB.
 - **Migrations**: always use the next available version number. Check existing files before creating a new migration. Prochaine version disponible : `V0.23`.
